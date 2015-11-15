@@ -12,12 +12,12 @@ if [ -f "server" ]; then
 fi
 
 gcc main.c \
-	-Wall \
+	-g -Wall \
 	-o bin/start \
 	-std=c99
 
 gcc server.c \
-	-Wall \
+	-g -Wall \
 	-o bin/server \
 	-std=c99
 

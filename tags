@@ -1,0 +1,18 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+index_of	main.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
+int16	number_name_defs.h	/^typedef int16_t int16;$/;"	t
+int32	number_name_defs.h	/^typedef int32_t int32;$/;"	t
+int64	number_name_defs.h	/^typedef int64_t int64;$/;"	t
+interpret_all	main.c	/^void interpret_all(int32 argL, char** argV){$/;"	f
+main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
+main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
+real32	number_name_defs.h	/^typedef float real32;$/;"	t
+real64	number_name_defs.h	/^typedef double real64;/;"	t
+uint16	number_name_defs.h	/^typedef uint16_t uint16;$/;"	t
+uint32	number_name_defs.h	/^typedef uint32_t uint32;$/;"	t
+uint64	number_name_defs.h	/^typedef uint64_t uint64;$/;"	t
