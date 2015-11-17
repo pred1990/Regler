@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <unistd.h> 
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "number_name_defs.h"
 
 void interpret_all(int32, char**);
@@ -21,14 +22,19 @@ int32 main(int32 argL, char** argV){
   int32 socket_handle = 0;
 
   int32 error = client_connect("127.0.0.1", port, &socket_handle);
-  if(error < 0)
-    printf("connection failed");
+  if(error < 0){
+    return -1;
+  }
 
   //NOTE when the connection is successfully established unblock the i/o
-  //socket_unblock_io(socket_handle);
+  socket_unblock_io(socket_handle);
 
-  char * message = "test\n";
-  write(socket_handle, message, sizeof(message));
+  char message[12] = {};
+  //for(uint32 i = 0; i < 20000; ++i){
+    //itoa(i, message, 10);
+    send(socket_handle, message, sizeof(message), 0);
+  //}
+
 
   close(socket_handle);
 
@@ -73,13 +79,17 @@ int32 client_connect(char * address, uint32 port, int32* socket_handle){
 
   //get socket
   *socket_handle = socket(AF_INET, SOCK_STREAM, 0);
+  //NOTE -1 is only valid for Linux!
+  if(*socket_handle == -1){
+    return -1;
+  }
 
 
   //NOTE returns 0 if host cannot be found or is malformed
   struct hostent *server = gethostbyname(address);
-  if(server == 0)
+  if(server == 0){
     return -1;
-
+  }
 
   struct sockaddr_in ip_address;
   memset(&ip_address, 0 ,sizeof(ip_address));
@@ -94,8 +104,11 @@ int32 client_connect(char * address, uint32 port, int32* socket_handle){
   int32 state = connect(  *socket_handle,
                           (struct sockaddr*) &ip_address,
                           sizeof(ip_address));
-  if(state < 0)
-    return -1;
+  if(state < 0){
+    printf("%s\n",strerror(errno));
+    close(*socket_handle);
+    return -2;
+  }
 
   return 0;
 }

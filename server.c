@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <fcntl.h>
 #include "number_name_defs.h"
 
 int32 main(int32 argL, char** argV){
