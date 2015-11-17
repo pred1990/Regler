@@ -4,17 +4,26 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-client_connect	main.c	/^int32 client_connect(char * address, uint32 port, int32* socket_handle){$/;"	f
+bool	main.c	/^typedef int32 bool;$/;"	t	file:
+client_connect	main.c	/^int32 client_connect(char* address, uint32 port, int32* socket_handle){$/;"	f
+config	main.c	/^typedef struct config{$/;"	s	file:
+config	main.c	/^} config;$/;"	t	typeref:struct:config	file:
+false	main.c	13;"	d	file:
 index_of	main.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
 int16	number_name_defs.h	/^typedef int16_t int16;$/;"	t
 int32	number_name_defs.h	/^typedef int32_t int32;$/;"	t
 int64	number_name_defs.h	/^typedef int64_t int64;$/;"	t
-interpret_all	main.c	/^void interpret_all(int32 argL, char** argV){$/;"	f
+interpret_all	main.c	/^void interpret_all(struct config* cfg, int32 argL, char** argV){$/;"	f
+ip	main.c	/^  char* ip;$/;"	m	struct:config	file:
 main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
 main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
+port	main.c	/^  uint32 port;$/;"	m	struct:config	file:
 real32	number_name_defs.h	/^typedef float real32;$/;"	t
 real64	number_name_defs.h	/^typedef double real64;/;"	t
 socket_unblock_io	main.c	/^int32 socket_unblock_io(int32 socket_handle){$/;"	f
+str_cpy_substr	main.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){$/;"	f
+str_equals	main.c	/^bool str_equals(char* a_chars, int32 a_len, char* b_chars, int32 b_len){$/;"	f
+true	main.c	14;"	d	file:
 uint16	number_name_defs.h	/^typedef uint16_t uint16;$/;"	t
 uint32	number_name_defs.h	/^typedef uint32_t uint32;$/;"	t
 uint64	number_name_defs.h	/^typedef uint64_t uint64;$/;"	t
