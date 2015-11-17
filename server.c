@@ -6,11 +6,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <fcntl.h>
 #include "number_name_defs.h"
 
 int32 main(int32 argL, char** argV){
 	struct sockaddr_in test;
 	struct sockaddr_in test2;
+
 	memset(&test, 0 ,sizeof(test));
 	test.sin_family = AF_INET;
 	test.sin_addr.s_addr = INADDR_ANY;
@@ -25,12 +27,17 @@ int32 main(int32 argL, char** argV){
     printf("not good %i", newsockfd);
 
   //get space for message with 4 chars
-  char message[6] = {};
-  int32 bytes = read(newsockfd, message, 6);
-  if(bytes < 0)
-    printf("error by reading message %i", 0);
+  int32 bytes = 0;
+  //run as long as u can
+  while(bytes >= 0){
+  char message[100] = {};
+    bytes = recv(newsockfd, message, 100, 0);
 
-  printf("message %s recived", message);
+    if(bytes == 0)
+      break;
+    printf("message %s recived, bytes: %i\n", message, bytes);
+  }
+
 
   close(newsockfd);
   close(sockfd);
