@@ -1,18 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "number_name_defs.h"
+#include "typedefs.h"
 #include "network.h"
-
-#define false 0
-#define true  1
-
-typedef int32 bool;
-
-typedef struct config{
-  uint32 port;
-  char ip[16];
-} config;
 
 //parameter interpretation
 void interpret_all(config*, int32, char**);
@@ -62,7 +52,7 @@ int32 main(int32 argL, char** argV){
 
 }
 
-void interpret_all(struct config* cfg, int32 argL, char** argV){
+void interpret_all(config* cfg, int32 argL, char** argV){
   for(int32 i = 0; i < argL; ++i){
 
     int32 index = index_of(argV[i], '=');
@@ -99,14 +89,13 @@ bool str_begins_with(char* a_chars, char* b_chars){
 
 //compares a substring with a proper (i.e. zero-terminated) string
 bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){
-  int a_i = a_offset;
-  int b_i = 0;
-  while(b_chars[b_i]){
-    if(a_chars[a_i] != b_chars[b_i]){
+  a_chars += a_offset;
+  while(*b_chars){
+    if(*a_chars != *b_chars){
       return false;   // different chars or a_chars ended
     }
-    ++a_i;
-    ++b_i;
+    ++a_chars;
+    ++b_chars;
   }
   return true;
 }
@@ -120,16 +109,15 @@ void str_cpy(char* dst_chars, char* src_chars, int32 src_len){
 //the copy string will be zero-terminated
 //dst_chars needs to be sufficiently big
 void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){
-  int dst_i = 0;
   int src_i = src_offset;
   while(src_i < src_end_index){
-    dst_chars[dst_i] = src_chars[src_i];
+    *dst_chars = src_chars[src_i];
     if(!src_chars[src_i]){
       return;
     }
-    ++dst_i;
+    ++dst_chars;
     ++src_i;
   }
-  dst_chars[dst_i] = '\0';
+  *dst_chars = '\0';
 }
 

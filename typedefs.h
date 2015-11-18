@@ -11,3 +11,30 @@ typedef uint64_t uint64;
 
 typedef float real32;
 typedef double real64;
+
+#define false 0
+#define true  1
+
+typedef int32 bool;
+
+typedef struct{
+  uint32 port;
+  char ip[16];
+} config;
+
+typedef struct{
+  char* msg;
+  real32 temperature; //or 64?
+  bool is_on;
+  uint64 time;
+} status;
+
+typedef struct{
+  char* msg;
+  bool is_on;
+} control;
+
+typedef struct{
+  char* msg;
+} request;
+
