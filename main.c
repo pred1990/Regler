@@ -54,7 +54,6 @@ int32 main(int32 argL, char** argV){
     index = (index + 1) %4;
     int32 len = strlen(pool[index]);
     send(socket_handle, pool[index], len, 0);
-    sleep(1);
   }
 
   close(socket_handle);

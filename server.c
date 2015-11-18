@@ -9,37 +9,56 @@
 #include <fcntl.h>
 #include "number_name_defs.h"
 
+
 int32 main(int32 argL, char** argV){
-	struct sockaddr_in test;
-	struct sockaddr_in test2;
+	struct sockaddr_in server_address;
+	struct sockaddr_in client_address;
 
-	memset(&test, 0 ,sizeof(test));
-	test.sin_family = AF_INET;
-	test.sin_addr.s_addr = INADDR_ANY;
-	test.sin_port = htons(4242);
-	int32 sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (bind(sockfd, (struct sockaddr *) &test, sizeof(test)) < 0)
-		return 1;	//error 1
-	listen(sockfd, 5);
-	uint32 test2len = sizeof(test2);
-  int32 newsockfd = accept(sockfd, (struct sockaddr *) &test2, &test2len);
-  if( newsockfd < 0)
-    printf("not good %i", newsockfd);
+  //clear server address
+	memset(&server_address, 0 ,sizeof(server_address));
 
-  //get space for message with 4 chars
-  int32 bytes = 0;
-  //run as long as u can
-  while(bytes >= 0){
+  //define nessesaray data
+	server_address.sin_family = AF_INET;
+	server_address.sin_addr.s_addr = INADDR_ANY;
+	server_address.sin_port = htons(4242);
+
+  //get server handle
+	int32 server = socket(AF_INET, SOCK_STREAM, 0);
+
+
+  //bind server to port etc
+  int32 bind_error = bind(  server,
+                            (struct sockaddr *) &server_address,
+                            sizeof(server_address));
+	if (bind_error < 0){
+		return 1;
+  }
+
+  //begin listing on socket
+	listen(server, 5);
+
+	uint32 client_address_size = sizeof(client_address);
+  int32 client = accept( server,
+                         (struct sockaddr *) &client_address,
+                         &client_address_size);
+  if( client == -1)
+    printf("not good %i", client);
+
+  int32 bytes_read = 0;
+  while(bytes_read >= 0){
   char message[100] = {};
-    bytes = recv(newsockfd, message, 100, 0);
+    bytes_read = recv(client, message, 10, 0);
 
-    if(bytes == 0)
+    if(bytes_read == 0)
       break;
-    printf("message %s recived, bytes: %i\n", message, bytes);
+    printf("message %s recived, bytes: %i\n", message, bytes_read);
+    sleep(1);
   }
 
 
-  close(newsockfd);
-  close(sockfd);
+  close(client);
+  close(server);
 
 }
+
+
