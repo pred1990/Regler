@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <fcntl.h>
 #include "number_name_defs.h"
+//#include "network.h"
 
 
 int32 main(int32 argL, char** argV){
@@ -42,19 +43,17 @@ int32 main(int32 argL, char** argV){
                          (struct sockaddr *) &client_address,
                          &client_address_size);
   if( client == -1)
-    printf("not good %i", client);
+    printf("accept failed");
 
   int32 bytes_read = 0;
   while(bytes_read >= 0){
   char message[100] = {};
+    //bytes_read = message_recive_pending(client, message, 10);
     bytes_read = recv(client, message, 10, 0);
-
     if(bytes_read == 0)
       break;
     printf("message %s recived, bytes: %i\n", message, bytes_read);
-    sleep(1);
   }
-
 
   close(client);
   close(server);

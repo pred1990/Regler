@@ -1,7 +1,7 @@
 #pragma once
 #include "network.h"
 
-int32 socket_unblock_io(int32 socket_handle){
+static int32 socket_unblock_io(int32 socket_handle){
   //get current config of socket
   int32 current_flags = fcntl(socket_handle, F_GETFL);
   if(current_flags < 0){
@@ -16,7 +16,7 @@ int32 socket_unblock_io(int32 socket_handle){
   return 0;
 }
 
-int32 client_connect(char* address, uint32 port, int32* socket_handle){
+static int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
   //get socket
   *socket_handle = socket(AF_INET, SOCK_STREAM, 0);
@@ -53,3 +53,14 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
   return 0;
 }
+
+static int32 message_recive_pending(int32 socket_handle, char* message, uint32 size){
+
+  int32 available_bytes = recv(socket_handle, message, size, MSG_PEEK);
+  printf("%i\n", available_bytes);
+
+  
+  return 0;
+}
+
+

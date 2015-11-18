@@ -27,7 +27,7 @@ void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 sr
 
 int32 main(int32 argL, char** argV){
   config cfg;
-  
+
   //set default config values
   cfg.port = 4242;
   str_cpy(cfg.ip, "127.0.0.1", 16);
@@ -42,19 +42,19 @@ int32 main(int32 argL, char** argV){
     return -1;
   }
 
-  //NOTE when the connection is successfully established unblock the i/o
   socket_unblock_io(socket_handle);
 
-  int32 index = 0;
+  int32 index = -1;
   char* pool[4] = {};
-  pool[0] = "mein";
-  pool[1] = "name";
-  pool[2] = "ist";
-  pool[3] = "steffen";
+  pool[0] = "mein\n";
+  pool[1] = "name\n";
+  pool[2] = "ist\n";
+  pool[3] = "steffen\n";
   while(1){
     index = (index + 1) %4;
     int32 len = strlen(pool[index]);
     send(socket_handle, pool[index], len, 0);
+    sleep(1);
   }
 
   close(socket_handle);
