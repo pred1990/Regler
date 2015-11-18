@@ -4,29 +4,43 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-bool	main.c	/^typedef int32 bool;$/;"	t	file:
+bool	typedefs.h	/^typedef int32 bool;$/;"	t
 client_connect	network.c	/^static int32 client_connect(char* address, uint32 port, int32* socket_handle){$/;"	f	file:
-config	main.c	/^typedef struct config{$/;"	s	file:
-config	main.c	/^} config;$/;"	t	typeref:struct:config	file:
-false	main.c	7;"	d	file:
-index_of	main.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
-int16	number_name_defs.h	/^typedef int16_t int16;$/;"	t
-int32	number_name_defs.h	/^typedef int32_t int32;$/;"	t
-int64	number_name_defs.h	/^typedef int64_t int64;$/;"	t
-interpret_all	main.c	/^void interpret_all(struct config* cfg, int32 argL, char** argV){$/;"	f
-ip	main.c	/^  char ip[16];$/;"	m	struct:config	file:
+config	typedefs.h	/^} config;$/;"	t	typeref:struct:__anon1
+control	typedefs.h	/^} control;$/;"	t	typeref:struct:__anon3
+control_off	messages.c	/^void control_off(control* ctrl){$/;"	f
+control_on	messages.c	/^void control_on(control*){$/;"	f
+control_set	messages.c	/^void control_set(control* ctrl, bool is_on){$/;"	f
+false	typedefs.h	15;"	d
+index_of	string_utils.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
+int16	typedefs.h	/^typedef int16_t int16;$/;"	t
+int32	typedefs.h	/^typedef int32_t int32;$/;"	t
+int64	typedefs.h	/^typedef int64_t int64;$/;"	t
+interpret_all	main.c	/^void interpret_all(config* cfg, int32 argL, char** argV){$/;"	f
+ip	typedefs.h	/^  char ip[16];$/;"	m	struct:__anon1
+is_on	typedefs.h	/^  bool is_on;$/;"	m	struct:__anon2
+is_on	typedefs.h	/^  bool is_on;$/;"	m	struct:__anon3
 main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
 main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
 message_recive_pending	network.c	/^static int32 message_recive_pending(int32 socket_handle, char* message, uint32 size){$/;"	f	file:
-port	main.c	/^  uint32 port;$/;"	m	struct:config	file:
-real32	number_name_defs.h	/^typedef float real32;$/;"	t
-real64	number_name_defs.h	/^typedef double real64;/;"	t
+msg	typedefs.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon3
+msg	typedefs.h	/^  char msg[40];    $/;"	m	struct:__anon2
+msg	typedefs.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon4
+port	typedefs.h	/^  uint32 port;$/;"	m	struct:__anon1
+real32	typedefs.h	/^typedef float real32;$/;"	t
+real64	typedefs.h	/^typedef double real64;$/;"	t
+request	messages.c	/^void request(request* req){$/;"	f
+request	typedefs.h	/^} request;$/;"	t	typeref:struct:__anon4
 socket_unblock_io	network.c	/^static int32 socket_unblock_io(int32 socket_handle){$/;"	f	file:
-str_begins_with	main.c	/^bool str_begins_with(char* a_chars, char* b_chars){$/;"	f
-str_cpy	main.c	/^void str_cpy(char* dst_chars, char* src_chars, int32 src_len){$/;"	f
-str_cpy_substr	main.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){$/;"	f
-substr_begins_with	main.c	/^bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){$/;"	f
-true	main.c	8;"	d	file:
-uint16	number_name_defs.h	/^typedef uint16_t uint16;$/;"	t
-uint32	number_name_defs.h	/^typedef uint32_t uint32;$/;"	t
-uint64	number_name_defs.h	/^typedef uint64_t uint64;$/;"	t
+status	typedefs.h	/^} status;$/;"	t	typeref:struct:__anon2
+status_parse	messages.c	/^void status_parse(status*, char*){$/;"	f
+str_begins_with	string_utils.c	/^bool str_begins_with(char* a_chars, char* b_chars){$/;"	f
+str_cpy	string_utils.c	/^void str_cpy(char* dst_chars, char* src_chars, int32 src_len){$/;"	f
+str_cpy_substr	string_utils.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){$/;"	f
+substr_begins_with	string_utils.c	/^bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){$/;"	f
+temperature	typedefs.h	/^  real32 temperature; \/\/or 64?$/;"	m	struct:__anon2
+time	typedefs.h	/^  uint64 time;$/;"	m	struct:__anon2
+true	typedefs.h	16;"	d
+uint16	typedefs.h	/^typedef uint16_t uint16;$/;"	t
+uint32	typedefs.h	/^typedef uint32_t uint32;$/;"	t
+uint64	typedefs.h	/^typedef uint64_t uint64;$/;"	t
