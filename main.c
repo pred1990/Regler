@@ -30,7 +30,7 @@ int32 main(int32 argL, char** argV){
   
   //set default config values
   cfg.port = 4242;
-  str_cpy(cfg.ip, "127.0.0.1", 16);  //<<== this is rather ugly
+  str_cpy(cfg.ip, "127.0.0.1", 16);
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
@@ -76,7 +76,7 @@ void interpret_all(struct config* cfg, int32 argL, char** argV){
       char dst_chars[size];
       str_cpy_substr(dst_chars, argV[i], index + 1, index + 1 + size);
       cfg->port = atoi(dst_chars);
-      printf("port set to %i\n", (*cfg).port);
+      printf("port set to %i\n", cfg->port);
 
     }else if(str_begins_with(argV[i], "ip")){
       int size = 16;    //255.255.255.255 + '\0' = 16
