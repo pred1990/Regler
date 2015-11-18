@@ -23,18 +23,21 @@ typedef struct{
 } config;
 
 typedef struct{
-  char* msg;
+  //figure out size/format of sprintf output
+  // "status $TEMPERATURE off uint64(20)\n" 
+  // 6 + 1 + T + 1 + 3 + 1 + 20 + 1 + 1 = 34 + T
+  char msg[40];    
   real32 temperature; //or 64?
   bool is_on;
   uint64 time;
 } status;
 
 typedef struct{
-  char* msg;
+  char msg[13]; // "control off\n"
   bool is_on;
 } control;
 
 typedef struct{
-  char* msg;
+  char msg[9];  // "request\n"
 } request;
 
