@@ -18,7 +18,7 @@ bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){
   a_chars += a_offset;
   while(*b_chars){
     if(*a_chars != *b_chars){
-      return false;   // different chars or a_chars ended
+      return false;   // different chars or a_chars ended early
     }
     ++a_chars;
     ++b_chars;
@@ -26,8 +26,11 @@ bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){
   return true;
 }
 
-void str_cpy(char* dst_chars, char* src_chars, int32 src_len){
-  str_cpy_substr(dst_chars, src_chars, 0, src_len);
+void str_cpy(char* dst_chars, char* src_chars){
+  while((*dst_chars = *src_chars)){
+    ++dst_chars;
+    ++src_chars;
+  }
 }
 
 //copies a substring from src_chars to dst_chars
