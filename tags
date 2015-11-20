@@ -22,10 +22,10 @@ is_on	typedefs.h	/^  bool is_on;$/;"	m	struct:__anon2
 is_on	typedefs.h	/^  bool is_on;$/;"	m	struct:__anon3
 main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
 main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
-message_recive_pending	network.c	/^static int32 message_recive_pending(int32 socket_handle, char* message, uint32 size){$/;"	f	file:
 msg	typedefs.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon3
 msg	typedefs.h	/^  char msg[40];    $/;"	m	struct:__anon2
 msg	typedefs.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon4
+pending_message_recive	network.c	/^static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){$/;"	f	file:
 port	typedefs.h	/^  uint32 port;$/;"	m	struct:__anon1
 real32	typedefs.h	/^typedef float real32;$/;"	t
 real64	typedefs.h	/^typedef double real64;$/;"	t

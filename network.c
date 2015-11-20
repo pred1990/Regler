@@ -3,13 +3,13 @@
 
 static int32 socket_unblock_io(int32 socket_handle){
   //get current config of socket
-  int32 current_flags = fcntl(socket_handle, F_GETFL);
+  int32 current_flags = fcntl(socket_handle, F_GETFL, 0);
   if(current_flags < 0){
     return -1;
   }
 
   //wirteback config with non block
-  int32 error = fcntl(socket_handle, F_GETFL, current_flags | O_NONBLOCK);
+  int32 error = fcntl(socket_handle, F_SETFL, current_flags | O_NONBLOCK);
   if(error < 0){
     return -1;
   }
@@ -54,12 +54,19 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
   return 0;
 }
 
-static int32 message_recive_pending(int32 socket_handle, char* message, uint32 size){
+static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){
 
   int32 available_bytes = recv(socket_handle, message, size, MSG_PEEK);
+  if(errno == EAGAIN || errno == EWOULDBLOCK);
+    return 0;
+
+  clock_nanosleep(1000);
+
+  if(index_of(message, '\n') == -1)
+    return -0;
+
   printf("%i\n", available_bytes);
 
-  
   return 0;
 }
 

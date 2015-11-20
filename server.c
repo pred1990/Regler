@@ -52,6 +52,7 @@ int32 main(int32 argL, char** argV){
     if(bytes_read == 0)
       break;
     printf("message %s recived, bytes: %i\n", message, bytes_read);
+    sleep(2);
   }
 
   close(client);
