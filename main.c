@@ -4,16 +4,23 @@
 #include "typedefs.h"
 #include "network.h"
 #include "string_utils.h"
+#include "messages.h"
+
+typedef struct{
+  uint32 port;
+  char ip[16];
+} config;
 
 //parameter interpretation
 void interpret_all(config*, int32, char**);
 
 int32 main(int32 argL, char** argV){
+  
   config cfg;
 
   //set default config values
   cfg.port = 4242;
-  str_cpy(cfg.ip, "127.0.0.1", 16);
+  str_cpy(cfg.ip, "127.0.0.1");
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
@@ -47,7 +54,6 @@ int32 main(int32 argL, char** argV){
 
   close(socket_handle);
   return 0;
-
 }
 
 void interpret_all(config* cfg, int32 argL, char** argV){
@@ -55,7 +61,7 @@ void interpret_all(config* cfg, int32 argL, char** argV){
 
     int32 index = index_of(argV[i], '=');
 
-    if(index == -1){
+    if(index < 0){
       continue;
 
     }else if(str_begins_with(argV[i], "port")){
