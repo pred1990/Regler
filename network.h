@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 #include "typedefs.h"
 #include "string_utils.h"
 

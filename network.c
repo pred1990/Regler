@@ -56,16 +56,30 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
 static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){
 
-  int32 available_bytes = recv(socket_handle, message, size, MSG_PEEK);
-  if(errno == EAGAIN || errno == EWOULDBLOCK);
+  recv(socket_handle, message, size, MSG_PEEK);
+
+  //check if there are messages queued
+  if(errno == EAGAIN || errno == EWOULDBLOCK)
     return 0;
 
-  clock_nanosleep(1000);
-
-  if(index_of(message, '\n') == -1)
+  //check if the message got already an end
+  int32 message_end = index_of(message, '\n') ;
+  if(message_end == -1)
     return -0;
 
-  printf("%i\n", available_bytes);
+
+  //fetch message from stack
+  int32 bytes_read = recv(socket_handle, message, message_end, 0);
+
+  if(bytes_read != message_end){
+    printf("warning: network message cannot be read till end");
+  }
+
+  //change \n to \0
+  message[message_end] = '\0';
+
+  printf("%s\n", message);
+
 
   return 0;
 }

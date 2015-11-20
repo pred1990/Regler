@@ -6,9 +6,9 @@
 
 typedef struct{
   //figure out size/format of sprintf output
-  // "status $TEMPERATURE off uint64(20)\n" 
+  // "status $TEMPERATURE off uint64(20)\n"
   // 6 + 1 + 16 + 1 + 3 + 1 + 20 + 1 + 1 = 50
-  char msg[50];    
+  char msg[50];
   real64 temperature;
   bool is_on;
   uint64 time;

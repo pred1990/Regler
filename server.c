@@ -53,6 +53,8 @@ int32 main(int32 argL, char** argV){
       break;
     printf("message %s recived, bytes: %i\n", message, bytes_read);
     sleep(2);
+    char* test = "OK\n";
+    send(client, test, 3, 0);
   }
 
   close(client);

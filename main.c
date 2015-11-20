@@ -41,15 +41,15 @@ int32 main(int32 argL, char** argV){
   pool[2] = "ist\n";
   pool[3] = "steffen\n";
 
-  char message[100];
+  char message[100] = {};
 
   while(1){
-    pending_message_recive(socket_handle, message, sizeof(message));
     index = (index + 1) %4;
     int32 len = strlen(pool[index]);
     send(socket_handle, pool[index], len, 0);
-    printf("%s\n", strerror(errno));
-    //sleep(1);
+    printf("sending message: %s\n", strerror(errno));
+    pending_message_recive(socket_handle, message, sizeof(message));
+    sleep(1);
   }
 
   close(socket_handle);
