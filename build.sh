@@ -14,12 +14,12 @@ fi
 gcc main.c \
 	-g -Wall \
 	-o bin/start \
-	-std=c99
+  -std=gnu99
 
 gcc server.c \
 	-g -Wall \
 	-o bin/server \
-	-std=c99
+  -std=gnu99
 
 if [ -f "bin/start" ]; then
 	chmod 755 bin/start

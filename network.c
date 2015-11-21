@@ -56,32 +56,39 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
 static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){
 
-  recv(socket_handle, message, size, MSG_PEEK);
+  int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
 
-  //check if there are messages queued
-  if(errno == EAGAIN || errno == EWOULDBLOCK)
+  if(errno == EAGAIN || errno == EWOULDBLOCK){
+    //there is no data to return
     return 0;
+  }
 
-  //check if the message got already an end
+  
   int32 message_end = index_of(message, '\n') ;
-  if(message_end == -1)
-    return -0;
+  if(message_end == -1){
+    //has no end of message
+    return -1;
+  }
 
+  //void buffered data
+  if(size_peek == size){
+    //remove trash data
+    recv(socket_handle, message, size, 0);
+    return -2;
+  }
 
   //fetch message from stack
   int32 bytes_read = recv(socket_handle, message, message_end, 0);
 
+  //if this condition does fire, we got a problem
+  assert(bytes_read == message_end);
   if(bytes_read != message_end){
-    printf("warning: network message cannot be read till end");
+    printf("warning: network message cannot be read till end\n");
   }
 
   //change \n to \0
   message[message_end] = '\0';
-
-  printf("%s\n", message);
-
-
-  return 0;
+  return message_end; //maybe message_end + 1 ?
 }
 
 

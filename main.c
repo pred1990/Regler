@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "typedefs.h"
 #include "network.h"
 #include "string_utils.h"
@@ -11,16 +12,21 @@ typedef struct{
   char ip[16];
 } config;
 
+typedef struct{
+  bool heating_on;
+  real64 current_temperature;
+} State;
+
 //parameter interpretation
 void interpret_all(config*, int32, char**);
 
 int32 main(int32 argL, char** argV){
-  
   config cfg;
 
   //set default config values
   cfg.port = 4242;
   str_cpy(cfg.ip, "127.0.0.1");
+  real64 temperature_target = 50.0f;
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
@@ -34,22 +40,66 @@ int32 main(int32 argL, char** argV){
 
   socket_unblock_io(socket_handle);
 
-  int32 index = -1;
-  char* pool[4] = {};
-  pool[0] = "mein\n";
-  pool[1] = "name\n";
-  pool[2] = "ist\n";
-  pool[3] = "steffen\n";
+  struct timespec time_wait;
 
-  char message[100] = {};
+
+  //wait 100 miliseconds as default
+  uint32 milisec_stop = 100;
+
+  char message[kilobyte];
+  State state = {};
 
   while(1){
-    index = (index + 1) %4;
-    int32 len = strlen(pool[index]);
-    send(socket_handle, pool[index], len, 0);
-    printf("sending message: %s\n", strerror(errno));
-    pending_message_recive(socket_handle, message, sizeof(message));
-    sleep(1);
+    //first check for messages
+    int32 error = 0; 
+    error = pending_message_recive(socket_handle, message, sizeof(message));
+    if(error == -2){
+        // buffer overrun, try again
+        continue;
+      }
+
+    //prepare status message
+    status_msg status = {};
+
+    //check message
+    uint32 message_type = msg_type(message);
+    if(message_type == 1){
+
+      //convert the message into internal type
+      bool error = status_msg_parse(&status, message);
+      if(error == 1){
+        printf("Warning: parsing of message %s failed\n",message);
+        continue;
+      }
+
+      //TODO do somthing meaningfull here
+        //create the control_off message
+      control_msg control_off;
+      if(status.temperature < temperature_target){
+        if(state.heating_on == false){
+          //too low temperature and heating is off -> turn heating on
+          control_msg_set(&control_off, true);
+          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+        }
+      } else {
+        if(state.heating_on == true){
+          //temperature is reached and heating is still on -> turn heating off
+          control_msg_set(&control_off, false);
+          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+        }
+      }
+
+    } else {
+      //message type is unknown
+      printf("Warning: message %s is not of type status\n", message);
+    }
+
+
+    //create requests
+
+    //wait till next round
+    time_wait.tv_nsec = 1000 * milisec_stop;
+    nanosleep(&time_wait, 0);
   }
 
   close(socket_handle);

@@ -17,3 +17,7 @@ typedef double real64;
 
 typedef int32 bool;
 
+#define kilobyte 1024
+#define megabyte kilobyte * 1024
+#define gigabyte megabyte * 1024
+

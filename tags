@@ -4,35 +4,41 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
+State	main.c	/^} State;$/;"	t	typeref:struct:__anon2	file:
 bool	typedefs.h	/^typedef int32 bool;$/;"	t
 client_connect	network.c	/^static int32 client_connect(char* address, uint32 port, int32* socket_handle){$/;"	f	file:
 config	main.c	/^} config;$/;"	t	typeref:struct:__anon1	file:
-control_msg	messages.h	/^} control_msg;$/;"	t	typeref:struct:__anon3
+control_msg	messages.h	/^} control_msg;$/;"	t	typeref:struct:__anon4
 control_msg_parse	messages.c	/^bool control_msg_parse(control_msg* ctrl, char* msg){$/;"	f
 control_msg_set	messages.c	/^void control_msg_set(control_msg* ctrl, bool set_on){$/;"	f
+current_temperature	main.c	/^  real64 current_temperature;$/;"	m	struct:__anon2	file:
 false	typedefs.h	15;"	d
+gigabyte	typedefs.h	22;"	d
+heating_on	main.c	/^  bool heating_on;$/;"	m	struct:__anon2	file:
 index_of	string_utils.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
 int16	typedefs.h	/^typedef int16_t int16;$/;"	t
 int32	typedefs.h	/^typedef int32_t int32;$/;"	t
 int64	typedefs.h	/^typedef int64_t int64;$/;"	t
 interpret_all	main.c	/^void interpret_all(config* cfg, int32 argL, char** argV){$/;"	f
 ip	main.c	/^  char ip[16];$/;"	m	struct:__anon1	file:
-is_on	messages.h	/^  bool is_on;$/;"	m	struct:__anon2
+is_on	messages.h	/^  bool is_on;$/;"	m	struct:__anon3
+kilobyte	typedefs.h	20;"	d
 main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
 main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
-msg	messages.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon3
-msg	messages.h	/^  char msg[50];$/;"	m	struct:__anon2
-msg	messages.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon4
+megabyte	typedefs.h	21;"	d
+msg	messages.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon4
+msg	messages.h	/^  char msg[50];$/;"	m	struct:__anon3
+msg	messages.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon5
 msg_type	messages.c	/^uint32 msg_type(char* msg){$/;"	f
 pending_message_recive	network.c	/^static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){$/;"	f	file:
 port	main.c	/^  uint32 port;$/;"	m	struct:__anon1	file:
 real32	typedefs.h	/^typedef float real32;$/;"	t
 real64	typedefs.h	/^typedef double real64;$/;"	t
-request_msg	messages.h	/^} request_msg;$/;"	t	typeref:struct:__anon4
+request_msg	messages.h	/^} request_msg;$/;"	t	typeref:struct:__anon5
 request_msg_init	messages.c	/^void request_msg_init(request_msg* req){$/;"	f
-set_on	messages.h	/^  bool set_on;$/;"	m	struct:__anon3
+set_on	messages.h	/^  bool set_on;$/;"	m	struct:__anon4
 socket_unblock_io	network.c	/^static int32 socket_unblock_io(int32 socket_handle){$/;"	f	file:
-status_msg	messages.h	/^} status_msg;$/;"	t	typeref:struct:__anon2
+status_msg	messages.h	/^} status_msg;$/;"	t	typeref:struct:__anon3
 status_msg_is_on	messages.c	/^void status_msg_is_on(status_msg* status, bool is_on){$/;"	f
 status_msg_parse	messages.c	/^bool status_msg_parse(status_msg* status, char* msg){$/;"	f
 status_msg_temperature	messages.c	/^void status_msg_temperature(status_msg* status, real64 temperature){$/;"	f
@@ -42,8 +48,8 @@ str_begins_with	string_utils.c	/^bool str_begins_with(char* a_chars, char* b_cha
 str_cpy	string_utils.c	/^void str_cpy(char* dst_chars, char* src_chars){$/;"	f
 str_cpy_substr	string_utils.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){$/;"	f
 substr_begins_with	string_utils.c	/^bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){$/;"	f
-temperature	messages.h	/^  real64 temperature;$/;"	m	struct:__anon2
-time	messages.h	/^  uint64 time;$/;"	m	struct:__anon2
+temperature	messages.h	/^  real64 temperature;$/;"	m	struct:__anon3
+time	messages.h	/^  uint64 time;$/;"	m	struct:__anon3
 true	typedefs.h	16;"	d
 uint16	typedefs.h	/^typedef uint16_t uint16;$/;"	t
 uint32	typedefs.h	/^typedef uint32_t uint32;$/;"	t
