@@ -44,15 +44,15 @@ int32 main(int32 argL, char** argV){
   struct timespec time_wait;
 
 
-  //wait 100 miliseconds as default
-  uint32 milisec_stop = 100;
-
   char message[kilobyte];
+  int32 time_round = 100 * 1000; // 100 milliseconds
+  int32 time_request = 1000 * 1000; // 1000 milliseconds
+  int32 time_passed = 0;
   State state = {};
 
   while(1){
     //first check for messages
-    int32 error = 0; 
+    int32 error = 0;
     error = pending_message_recive(socket_handle, message, sizeof(message));
     if(error == -2){
         // buffer overrun, try again
@@ -76,15 +76,15 @@ int32 main(int32 argL, char** argV){
       //TODO do somthing meaningfull here
         //create the control_off message
       control_msg control_off;
+      //TODO change status.temperature to status_msg_temperature ?
       if(status.temperature < cfg.target_temperature){
         if(state.heating_on == false){
-          //too low temperature and heating is off -> turn heating on
           control_msg_set(&control_off, true);
           send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
         }
-      } else {
+      //TODO change status.temperature to status_msg_temperature ?
+      } else if(status.temperature > cfg.target_temperature){
         if(state.heating_on == true){
-          //temperature is reached and heating is still on -> turn heating off
           control_msg_set(&control_off, false);
           send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
         }
@@ -95,11 +95,24 @@ int32 main(int32 argL, char** argV){
       printf("Warning: message %s is not of type status\n", message);
     }
 
+    //send a reaquest for status
+    if(time_passed >= time_request){
+      request_msg request = {};
+      request_msg_init(&request);
 
-    //create requests
+      send(socket_handle, request.msg, sizeof(request.msg), 0);
+      if(errno != 0){
+        printf("Error: reqeust cannot be send");
+      }
+    }
 
+    if(time_passed > time_request){
+      time_passed = 0;
+    }
+
+    time_passed += time_round;
     //wait till next round
-    time_wait.tv_nsec = 1000 * milisec_stop;
+    time_wait.tv_nsec = time_round;
     nanosleep(&time_wait, 0);
   }
 
