@@ -9,6 +9,7 @@
 typedef struct{
   uint32 port;
   char ip[16];
+  real64 target_temperature;
 } config;
 
 //parameter interpretation
@@ -21,6 +22,7 @@ int32 main(int32 argL, char** argV){
   //set default config values
   cfg.port = 4242;
   str_cpy(cfg.ip, "127.0.0.1");
+  cfg.target_temperature = 90.0;
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
@@ -75,6 +77,13 @@ void interpret_all(config* cfg, int32 argL, char** argV){
       int size = 16;    //255.255.255.255 + '\0' = 16
       str_cpy_substr(cfg->ip, argV[i], index + 1, index + 1 + size);
       printf("ip set to %s\n", cfg->ip);
+      
+    }else if(str_begins_with(argV[i], "target")){
+      int size = 24;    //est. max length for double value
+      char dst_chars[size];
+      str_cpy_substr(dst_chars, argV[i], index + 1, index + 1 + size);
+      cfg->target_temperature = (atof(dst_chars));
+      printf("target temperature set to %f\n", cfg->target_temperature);
     }
   }
 }
