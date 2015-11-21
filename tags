@@ -48,6 +48,7 @@ str_begins_with	string_utils.c	/^bool str_begins_with(char* a_chars, char* b_cha
 str_cpy	string_utils.c	/^void str_cpy(char* dst_chars, char* src_chars){$/;"	f
 str_cpy_substr	string_utils.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){$/;"	f
 substr_begins_with	string_utils.c	/^bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){$/;"	f
+target_temperature	main.c	/^  real64 target_temperature;$/;"	m	struct:__anon1	file:
 temperature	messages.h	/^  real64 temperature;$/;"	m	struct:__anon3
 time	messages.h	/^  uint64 time;$/;"	m	struct:__anon3
 true	typedefs.h	16;"	d
