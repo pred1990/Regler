@@ -2,11 +2,11 @@
 #include "messages.h"
 
 uint32 msg_type(char* msg){
-  if(str_begins_with(msg, "status")){
+  if(str_begins_with(msg, "status ")){
     return 1;
-  }else if(str_begins_with(msg, "control")){
+  }else if(str_begins_with(msg, "control ")){
     return 2;
-  }else if(str_begins_with(msg, "request")){
+  }else if(str_begins_with(msg, "request\n")){
     return 3;
   }else{
     return 0; //undefined

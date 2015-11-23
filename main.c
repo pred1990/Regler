@@ -50,14 +50,29 @@ int32 main(int32 argL, char** argV){
   int32 time_passed = 0;
   State state = {};
 
+  
+  //prepare request message
+  request_msg request = {};
+  request_msg_init(&request);
+  
+  //prepare control messages
+  control_msg control_off = {};
+  control_msg control_on = {};
+  control_msg_set(&control_off, false);
+  control_msg_set(&control_on, true);
+  
+  //send initial status message
+  send(socket_handle, request.msg, sizeof(request.msg), 0);
+  
   while(1){
+    
     //first check for messages
     int32 error = 0;
     error = pending_message_recive(socket_handle, message, sizeof(message));
     if(error == -2){
-        // buffer overrun, try again
-        continue;
-      }
+      // buffer overrun, try again
+      continue;
+    }
 
     //prepare status message
     status_msg status = {};
@@ -74,18 +89,15 @@ int32 main(int32 argL, char** argV){
       }
 
       //TODO do somthing meaningfull here
-        //create the control_off message
-      control_msg control_off;
+      
       //TODO change status.temperature to status_msg_temperature ?
       if(status.temperature < cfg.target_temperature){
         if(state.heating_on == false){
-          control_msg_set(&control_off, true);
-          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
         }
       //TODO change status.temperature to status_msg_temperature ?
       } else if(status.temperature > cfg.target_temperature){
         if(state.heating_on == true){
-          control_msg_set(&control_off, false);
           send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
         }
       }
@@ -97,12 +109,10 @@ int32 main(int32 argL, char** argV){
 
     //send a reaquest for status
     if(time_passed >= time_request){
-      request_msg request = {};
-      request_msg_init(&request);
 
       send(socket_handle, request.msg, sizeof(request.msg), 0);
       if(errno != 0){
-        printf("Error: reqeust cannot be send");
+        printf("Error: reqeust cannot be send\n");
       }
     }
 
