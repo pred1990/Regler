@@ -50,23 +50,27 @@ int32 main(int32 argL, char** argV){
   int32 time_passed = 0;
   State state = {};
 
+  //prepare request message
   request_msg request = {};
   request_msg_init(&request);
 
+  //prepare control messages
+  control_msg control_off = {};
+  control_msg control_on = {};
+  control_msg_set(&control_off, false);
+  control_msg_set(&control_on, true);
+
+  //send initial status message
   send(socket_handle, request.msg, sizeof(request.msg), 0);
-  sleep(1);
-
-
 
   while(1){
+
     //first check for messages
     int32 ret_val = 0;
     ret_val = pending_message_recive(socket_handle, message, sizeof(message));
     if(ret_val == -2){
-
         // buffer overrun, try again
         continue;
-
     }else if(ret_val > 0){
       //message recived process it...
       printf("Recived message: %s", message);
@@ -82,42 +86,37 @@ int32 main(int32 argL, char** argV){
           printf("Warning: parsing of message %s failed\n",message);
           continue;
         }
+      }
 
-        //TODO do somthing meaningfull here
-          //create the control_off message
-        control_msg control_off;
-        //TODO change status.temperature to status_msg_temperature ?
-        if(status.temperature < cfg.target_temperature){
-          if(state.heating_on == false){
-            control_msg_set(&control_off, true);
-            send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
-          }
-        //TODO change status.temperature to status_msg_temperature ?
-        } else if(status.temperature > cfg.target_temperature){
-          if(state.heating_on == true){
-            control_msg_set(&control_off, false);
-            send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
-          }
+      //TODO do somthing meaningfull here
+
+      //TODO change status.temperature to status_msg_temperature ?
+      if(status.temperature < cfg.target_temperature){
+        if(state.heating_on == false){
+          send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+        }
+      //TODO change status.temperature to status_msg_temperature ?
+      } else if(status.temperature > cfg.target_temperature){
+        if(state.heating_on == true){
+          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
         }
 
-      } else {
-        //message type is unknown
-        printf("Warning: message %s is not of type status\n", message);
       }
     }
 
-      //send a reaquest for status
-      if(time_passed >= time_request){
-        printf("Sending periodic request\n");
-        errno = 0;
-        send(socket_handle, request.msg, sizeof(request.msg), 0);
-        if(errno != 0){
-          if(errno != EWOULDBLOCK || errno != EAGAIN){
-            printf("Sending failed: %s \n", strerror(errno));
-          }
+
+    //send a reaquest for status
+    if(time_passed >= time_request){
+      printf("Sending periodic request\n");
+      errno = 0;
+      send(socket_handle, request.msg, sizeof(request.msg), 0);
+      if(errno != 0){
+        if(errno != EWOULDBLOCK || errno != EAGAIN){
+          printf("Sending failed: %s \n", strerror(errno));
         }
-        time_passed = 0;
       }
+      time_passed = 0;
+    }
 
     //wait till next round
     time_wait.tv_nsec = time_round;

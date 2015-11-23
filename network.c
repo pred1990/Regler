@@ -56,6 +56,7 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
 static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){
 
+  errno = 0;
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
 
   if(errno == EAGAIN || errno == EWOULDBLOCK){
@@ -77,6 +78,8 @@ static int32 pending_message_recive(int32 socket_handle, char* message, uint32 s
     return -2;
   }
 
+  message_end += 1;
+
   //fetch message from stack
   int32 bytes_read = recv(socket_handle, message, message_end, 0);
 
@@ -87,7 +90,6 @@ static int32 pending_message_recive(int32 socket_handle, char* message, uint32 s
   }
 
   //change \n to \0
-  message[message_end] = '\0';
   return message_end; //maybe message_end + 1 ?
 }
 
