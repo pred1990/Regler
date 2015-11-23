@@ -64,6 +64,7 @@ int32 main(int32 argL, char** argV){
   send(socket_handle, request.msg, sizeof(request.msg), 0);
 
   while(1){
+    memset(message, 0 , kilobyte);
 
     //first check for messages
     int32 ret_val = 0;
