@@ -16,6 +16,6 @@
 static int32 client_connect(char* address, uint32 port, int32* socket_handle);
 static int32 socket_unblock_io(int32 socket_handle);
 
-static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size);
+static int32 pending_message_receive(int32 socket_handle, char* message, uint32 size);
 
 #include "network.c"

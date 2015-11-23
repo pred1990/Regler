@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include "typedefs.h"
 #include "messages.h"
+#include "network.h"
 
 typedef struct {
   real64 temperature;
@@ -73,15 +74,28 @@ int32 main(int32 argL, char** argV){
 
   //control messages containers (parse incoming messages)
   control_msg control;
-
+  
+  //sleep timer
+  struct timespec time_sleep;
+  time_sleep.tv_sec = 0;
+  time_sleep.tv_nsec = 1000 * 1000 * 200;  //200ms
+  
+  //buffer
   int32 bytes_read = 0;
   uint32 buf_size = 100;
   char message[buf_size];
-  while(bytes_read >= 0){
-    //bytes_read = message_recive_pending(client, message, 10);
-    bytes_read = recv(client, message, 100, 0);
+  
+  while(true){
+    printf("waiting...\n");
+    //nanosleep(&time_sleep, 0);
+    //sleep(1);
+    clock_nanosleep(CLOCK_MONOTONIC, 0, &time_sleep, 0);
+    
+    bytes_read = pending_message_receive(client, message, buf_size);
+    //bytes_read = recv(client, message, 100, 0);
     if(bytes_read == 0){
-      break;
+      //break;
+      continue;
     }
 
     for(int32 i = 0; i < buf_size; ++i){
@@ -98,8 +112,9 @@ int32 main(int32 argL, char** argV){
         printf("sending...:\n%s\n", status.msg);
         send(client, status.msg, 39, 0);
       }
-      //TODO keep trailing chars somewhere: if a "request\n" is split between buffers it is not recognized
     }
+    
+    printf("looped\n");
   }
 
   close(client);

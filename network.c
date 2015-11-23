@@ -54,7 +54,7 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
   return 0;
 }
 
-static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){
+static int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
 
   errno = 0;
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
@@ -65,7 +65,7 @@ static int32 pending_message_recive(int32 socket_handle, char* message, uint32 s
   }
 
 
-  int32 message_end = index_of(message, '\n') ;
+  int32 message_end = index_of_ignore_terminate(message, size, '\n') ;
   if(message_end == -1){
     //has no end of message
     return -1;
@@ -78,11 +78,17 @@ static int32 pending_message_recive(int32 socket_handle, char* message, uint32 s
     return -2;
   }
 
-  message_end += 1;
+  //msg = "M\n\0"
+  //message_end == 1;
+  //message_end += 1 == 2
+  
+  message_end += 2;
 
   //fetch message from stack
   int32 bytes_read = recv(socket_handle, message, message_end, 0);
-
+  
+  printf("bytes_read: %i message_end: %i\n", bytes_read, message_end);
+  
   //if this condition does fire, we got a problem
   assert(bytes_read == message_end);
   if(bytes_read != message_end){

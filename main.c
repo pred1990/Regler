@@ -67,13 +67,13 @@ int32 main(int32 argL, char** argV){
 
     //first check for messages
     int32 ret_val = 0;
-    ret_val = pending_message_recive(socket_handle, message, sizeof(message));
+    ret_val = pending_message_receive(socket_handle, message, sizeof(message));
     if(ret_val == -2){
         // buffer overrun, try again
         continue;
     }else if(ret_val > 0){
-      //message recived process it...
-      printf("Recived message: %s", message);
+      //message received process it...
+      printf("Received message: %s", message);
       status_msg status = {};
 
       //check message
