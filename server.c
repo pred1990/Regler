@@ -47,14 +47,13 @@ int32 main(int32 argL, char** argV){
   int32 bytes_read = 0;
   while(bytes_read >= 0){
   char message[100] = {};
-    //bytes_read = message_recive_pending(client, message, 10);
     bytes_read = recv(client, message, 10, 0);
     if(bytes_read == 0)
       break;
     printf("message %s recived, bytes: %i\n", message, bytes_read);
-    sleep(2);
-    char* test = "OK\n";
-    send(client, test, 3, 0);
+    char test[50] = {};
+      sprintf(test, "", 50.0, "ON", );
+    send(client, test, 50, 0);
   }
 
   close(client);

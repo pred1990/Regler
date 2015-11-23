@@ -46,74 +46,83 @@ int32 main(int32 argL, char** argV){
 
   char message[kilobyte];
   int32 time_round = 100 * 1000; // 100 milliseconds
-  int32 time_request = 1000 * 1000; // 1000 milliseconds
+  int32 time_request = 200 * 1000; // 1000 milliseconds
   int32 time_passed = 0;
   State state = {};
 
+  request_msg request = {};
+  request_msg_init(&request);
+
+  send(socket_handle, request.msg, sizeof(request.msg), 0);
+  sleep(1);
+
+
+
   while(1){
     //first check for messages
-    int32 error = 0;
-    error = pending_message_recive(socket_handle, message, sizeof(message));
-    if(error == -2){
+    int32 ret_val = 0;
+    ret_val = pending_message_recive(socket_handle, message, sizeof(message));
+    if(ret_val == -2){
+
         // buffer overrun, try again
         continue;
-      }
 
-    //prepare status message
-    status_msg status = {};
+    }else if(ret_val > 0){
+      //message recived process it...
+      printf("Recived message: %s", message);
+      status_msg status = {};
 
-    //check message
-    uint32 message_type = msg_type(message);
-    if(message_type == 1){
+      //check message
+      uint32 message_type = msg_type(message);
+      if(message_type == 1){
 
-      //convert the message into internal type
-      bool error = status_msg_parse(&status, message);
-      if(error == 1){
-        printf("Warning: parsing of message %s failed\n",message);
-        continue;
-      }
-
-      //TODO do somthing meaningfull here
-        //create the control_off message
-      control_msg control_off;
-      //TODO change status.temperature to status_msg_temperature ?
-      if(status.temperature < cfg.target_temperature){
-        if(state.heating_on == false){
-          control_msg_set(&control_off, true);
-          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+        //convert the message into internal type
+        bool parsing_complete = status_msg_parse(&status, message);
+        if(parsing_complete == false){
+          printf("Warning: parsing of message %s failed\n",message);
+          continue;
         }
-      //TODO change status.temperature to status_msg_temperature ?
-      } else if(status.temperature > cfg.target_temperature){
-        if(state.heating_on == true){
-          control_msg_set(&control_off, false);
-          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+
+        //TODO do somthing meaningfull here
+          //create the control_off message
+        control_msg control_off;
+        //TODO change status.temperature to status_msg_temperature ?
+        if(status.temperature < cfg.target_temperature){
+          if(state.heating_on == false){
+            control_msg_set(&control_off, true);
+            send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          }
+        //TODO change status.temperature to status_msg_temperature ?
+        } else if(status.temperature > cfg.target_temperature){
+          if(state.heating_on == true){
+            control_msg_set(&control_off, false);
+            send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          }
         }
-      }
 
-    } else {
-      //message type is unknown
-      printf("Warning: message %s is not of type status\n", message);
-    }
-
-    //send a reaquest for status
-    if(time_passed >= time_request){
-      request_msg request = {};
-      request_msg_init(&request);
-
-      send(socket_handle, request.msg, sizeof(request.msg), 0);
-      if(errno != 0){
-        printf("Error: reqeust cannot be send");
+      } else {
+        //message type is unknown
+        printf("Warning: message %s is not of type status\n", message);
       }
     }
 
-    if(time_passed > time_request){
-      time_passed = 0;
-    }
+      //send a reaquest for status
+      if(time_passed >= time_request){
+        printf("Sending periodic request\n");
+        errno = 0;
+        send(socket_handle, request.msg, sizeof(request.msg), 0);
+        if(errno != 0){
+          if(errno != EWOULDBLOCK || errno != EAGAIN){
+            printf("Sending failed: %s \n", strerror(errno));
+          }
+        }
+        time_passed = 0;
+      }
 
-    time_passed += time_round;
     //wait till next round
     time_wait.tv_nsec = time_round;
     nanosleep(&time_wait, 0);
+    time_passed += time_round;
   }
 
   close(socket_handle);
@@ -139,7 +148,7 @@ void interpret_all(config* cfg, int32 argL, char** argV){
       int size = 16;    //255.255.255.255 + '\0' = 16
       str_cpy_substr(cfg->ip, argV[i], index + 1, index + 1 + size);
       printf("ip set to %s\n", cfg->ip);
-      
+
     }else if(str_begins_with(argV[i], "target")){
       int size = 24;    //est. max length for double value
       char dst_chars[size];

@@ -29,7 +29,7 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
   //NOTE returns 0 if host cannot be found or is malformed
   struct hostent *server = gethostbyname(address);
   if(server == 0){
-    return -1;
+    return -2;
   }
 
   struct sockaddr_in ip_address;
@@ -63,7 +63,7 @@ static int32 pending_message_recive(int32 socket_handle, char* message, uint32 s
     return 0;
   }
 
-  
+
   int32 message_end = index_of(message, '\n') ;
   if(message_end == -1){
     //has no end of message
