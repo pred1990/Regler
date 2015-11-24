@@ -78,43 +78,42 @@ int32 main(int32 argL, char** argV){
   //sleep timer
   struct timespec time_sleep;
   time_sleep.tv_sec = 0;
-  time_sleep.tv_nsec = 1000 * 1000 * 200;  //200ms
+  time_sleep.tv_nsec = 1000 * 1000 * 200;  //50ms
   
   //buffer
   int32 bytes_read = 0;
-  uint32 buf_size = 100;
+  uint32 buf_size = 1024;
   char message[buf_size];
+  printf("msg_size: %lu", sizeof(message));
   
   while(true){
-    printf("waiting...\n");
-    //nanosleep(&time_sleep, 0);
-    //sleep(1);
-    clock_nanosleep(CLOCK_MONOTONIC, 0, &time_sleep, 0);
+    nanosleep(&time_sleep, 0);
     
     bytes_read = pending_message_receive(client, message, buf_size);
-    //bytes_read = recv(client, message, 100, 0);
     if(bytes_read == 0){
-      //break;
+      //TODO handle error cases
       continue;
-    }
-
-    for(int32 i = 0; i < buf_size; ++i){
-      if(msg_type(message + i) == 2){         //control
-        bool is_valid = control_msg_parse(&control, message + i);
-        if(!is_valid){
-          continue;
+    }else if(bytes_read == -1){
+      continue;
+    }else if(bytes_read == -2){
+      continue;
+    }else{
+      if(msg_type(message) == 2){         //control
+        bool is_valid = control_msg_parse(&control, message);
+        if(is_valid){
+          status_calculate_next(&status, &status_time, &env);
+          status.is_on = control.set_on;
         }
-        status_calculate_next(&status, &status_time, &env);
-        status.is_on = control.set_on;
-      }else if(msg_type(message + i) == 3){  //status
+      }else if(msg_type(message) == 3){   //status
         status_calculate_next(&status, &status_time, &env);
         status_msg_write(&status);
-        printf("sending...:\n%s\n", status.msg);
-        send(client, status.msg, 39, 0);
+        printf("sending message: %s", status.msg);
+        message_send(client, status.msg, 50, 0);
+      }else{
+        printf("not a valid message: %s\n", message);
       }
     }
     
-    printf("looped\n");
   }
 
   close(client);

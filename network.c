@@ -1,7 +1,7 @@
 #pragma once
 #include "network.h"
 
-static int32 socket_unblock_io(int32 socket_handle){
+int32 socket_unblock_io(int32 socket_handle){
   //get current config of socket
   int32 current_flags = fcntl(socket_handle, F_GETFL, 0);
   if(current_flags < 0){
@@ -16,7 +16,7 @@ static int32 socket_unblock_io(int32 socket_handle){
   return 0;
 }
 
-static int32 client_connect(char* address, uint32 port, int32* socket_handle){
+int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
   //get socket
   *socket_handle = socket(AF_INET, SOCK_STREAM, 0);
@@ -54,7 +54,7 @@ static int32 client_connect(char* address, uint32 port, int32* socket_handle){
   return 0;
 }
 
-static int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
+int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
 
   errno = 0;
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
@@ -63,40 +63,69 @@ static int32 pending_message_receive(int32 socket_handle, char* message, uint32 
     //there is no data to return
     return 0;
   }
-
-
-  int32 message_end = index_of_ignore_terminate(message, size, '\n') ;
-  if(message_end == -1){
+  
+  bool is_msg_found = false;
+  int32 msg_begin = 0;
+  int32 msg_end = index_of_ignore_terminate(message, size, '\n') ;
+  
+  if(msg_end == -1){
     //has no end of message
-    return -1;
+    
+    if(size_peek < size){
+      //no more data, can be cleared
+      recv(socket_handle, message, size_peek, 0);
+      return -1;  //no more data
+    }else{
+      return -2;  //TODO not sure what to do here
+    }
   }
-
-  //void buffered data
-  if(size_peek == size){
-    //remove trash data
-    recv(socket_handle, message, size, 0);
+  
+  //find message begin
+  if(msg_type(message) > 0){
+    is_msg_found = true;
+    
+  }else{
+    msg_begin = msg_end;
+    
+    //figure out how far left we can go
+    int32 leftmost_index = msg_end - 50;
+    if(leftmost_index < 0){
+      leftmost_index = 1;   //we already checked 0
+    }
+    
+    //go left
+    while(!is_msg_found && msg_begin >= leftmost_index){
+      --msg_begin;
+      is_msg_found = msg_type(message + msg_begin) > 0;
+    }
+  }
+  
+  if(!is_msg_found){
+    //there's a \n somewhere but everything before it is trash
+    recv(socket_handle, message, msg_end, 0);
     return -2;
   }
-
-  //msg = "M\n\0"
-  //message_end == 1;
-  //message_end += 1 == 2
   
-  message_end += 2;
-
-  //fetch message from stack
-  int32 bytes_read = recv(socket_handle, message, message_end, 0);
-  
-  printf("bytes_read: %i message_end: %i\n", bytes_read, message_end);
-  
-  //if this condition does fire, we got a problem
-  assert(bytes_read == message_end);
-  if(bytes_read != message_end){
-    printf("warning: network message cannot be read till end\n");
+  //printf("begin: %i end: %i\n", msg_begin, msg_end);
+  if(msg_begin > 0){
+    //clear trash, reload message
+    recv(socket_handle, message, msg_begin, 0);   //target char* may not be 0
+    msg_end -= msg_begin;
+    recv(socket_handle, message, msg_end + 2, MSG_PEEK);  // + 2 : include \n and \0
   }
-
-  //change \n to \0
-  return message_end; //maybe message_end + 1 ?
+  //fetch message
+  int32 bytes_read = recv(socket_handle, message, msg_end + 2, 0);
+  
+  //make sure we didn't do anything silly
+  assert(bytes_read == msg_end + 2);
+  assert(message[msg_end] == '\n');
+  
+  return msg_end + 1;   //inclue \n
 }
 
-
+void message_send(int32 socket_handle, char* message, uint32 msg_size, int32 flags){
+  int32 msg_end = index_of(message, '\n');
+  int32 send_size = msg_end < 0 ? msg_size : msg_end + 2;
+  //fail gracefully or include/append \n\0
+  send(socket_handle, message, send_size, flags);
+}

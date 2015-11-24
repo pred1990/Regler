@@ -61,9 +61,9 @@ int32 main(int32 argL, char** argV){
   control_msg_set(&control_on, true);
 
   //send initial status message
-  send(socket_handle, request.msg, sizeof(request.msg), 0);
+  message_send(socket_handle, request.msg, sizeof(request.msg), 0);
 
-  while(1){
+  while(true){
     memset(message, 0 , kilobyte);
 
     //first check for messages
@@ -94,23 +94,22 @@ int32 main(int32 argL, char** argV){
       //TODO change status.temperature to status_msg_temperature ?
       if(status.temperature < cfg.target_temperature){
         if(state.heating_on == false){
-          send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+          message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
         }
       //TODO change status.temperature to status_msg_temperature ?
       } else if(status.temperature > cfg.target_temperature){
         if(state.heating_on == true){
-          send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
         }
 
       }
     }
 
-
     //send a reaquest for status
     if(time_passed >= time_request){
-      printf("Sending periodic request\n");
+      //printf("Sending periodic request\n");
       errno = 0;
-      send(socket_handle, request.msg, sizeof(request.msg), 0);
+      message_send(socket_handle, request.msg, sizeof(request.msg), 0);
       if(errno != 0){
         if(errno != EWOULDBLOCK || errno != EAGAIN){
           printf("Sending failed: %s \n", strerror(errno));
