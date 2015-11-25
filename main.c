@@ -13,10 +13,12 @@ typedef struct{
   real64 target_temperature;
 } config;
 
+/*
 typedef struct{
   bool heating_on;
   real64 current_temperature;
 } State;
+*/
 
 //parameter interpretation
 void interpret_all(config*, int32, char**);
@@ -41,15 +43,12 @@ int32 main(int32 argL, char** argV){
 
   socket_unblock_io(socket_handle);
 
-  struct timespec time_wait;
-
-
-  char message[kilobyte];
-  int32 time_round = 100 * 1000; // 100 milliseconds
-  int32 time_request = 200 * 1000; // 1000 milliseconds
-  int32 time_passed = 0;
-  State state = {};
-
+  struct timespec time_sleep;
+  time_sleep.tv_sec = 0;   //!!!
+  time_sleep.tv_nsec = 5 * 1000 * 1000; // 5 milliseconds
+  uint32 time_request = 35 * 1000 * 1000; // 35 milliseconds
+  uint32 time_passed = 0;
+  
   //prepare request message
   request_msg request = {};
   request_msg_init(&request);
@@ -60,61 +59,52 @@ int32 main(int32 argL, char** argV){
   control_msg_set(&control_off, false);
   control_msg_set(&control_on, true);
 
+  //status message container (receive)
+  status_msg status = {};
+  
   //send initial status message
   message_send(socket_handle, request.msg, sizeof(request.msg), 0);
-
+  printf("first request sent!\n");
+  
+  //buffer
+  int32 bytes_read = 0;
+  //uint32 buf_size = 1024;
+  char message[1024];
+  memset(message, 0 , 1024);
+  
+  printf("entering loop...\n");
   while(true){
-    memset(message, 0 , kilobyte);
 
-    //first check for messages
-    int32 ret_val = 0;
-    ret_val = pending_message_receive(socket_handle, message, sizeof(message));
-    if(ret_val == -2){
+    //printf("bar\n");
+    //check for messages
+    while((bytes_read = pending_message_receive(socket_handle, message, 1024))){
+      if(bytes_read == -1){
         // buffer overrun, try again
         continue;
-    }else if(ret_val > 0){
-      //message received process it...
-      printf("Received message: %s", message);
-      status_msg status = {};
-
-      //check message
-      uint32 message_type = msg_type(message);
-      if(message_type == 0){
-        message_type = 
       }
-      if(message_type == 1){
 
-        //convert the message into internal type
-        bool parsing_complete = status_msg_parse(&status, message);
-        if(parsing_complete == false){
-          printf("Warning: parsing of message %s failed\n",message);
+      //status
+      if(msg_type(message) == 1){
+        printf("Received message: %s", message);
+        bool is_valid = status_msg_parse(&status, message);
+        if(!is_valid){
           continue;
         }
-      }
 
-      if(state.heating_on != status.is_on){
-        printf("Warning state missmatch: Regulators state: %s Message state: %s",
-                state.heating_on ? "ON" : "OFF",
-                status.is_on ? "ON" : "OFF");
-        state.heating_on = status.is_on;
-      }
+        //TODO do somthing meaningfull here
 
-
-      //TODO do somthing meaningfull here
-
-      //TODO change status.temperature to status_msg_temperature ?
-      if(status.temperature < cfg.target_temperature){
-        if(state.heating_on == false){
-          message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
-          state.heating_on = true;
-        }
-      //TODO change status.temperature to status_msg_temperature ?
-      } else if(status.temperature > cfg.target_temperature){
-        if(state.heating_on == true){
-          message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
-          state.heating_on = false;
+        if(status.temperature <= (cfg.target_temperature - 1)){
+          if(!status.is_on){
+            message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+          }
+        } else if(status.temperature >= (cfg.target_temperature + 1)){
+          if(!status.is_on){
+            message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          }
         }
 
+      }else{
+        printf("not a valid message: %s", message);
       }
     }
 
@@ -132,11 +122,12 @@ int32 main(int32 argL, char** argV){
     }
 
     //wait till next round
-    time_wait.tv_nsec = time_round;
-    nanosleep(&time_wait, 0);
-    time_passed += time_round;
+    nanosleep(&time_sleep, 0);
+    time_passed += time_sleep.tv_nsec;
   }
 
+  printf("exited loop!\n");
+  
   close(socket_handle);
   return 0;
 }

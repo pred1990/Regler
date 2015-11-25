@@ -19,7 +19,7 @@ typedef struct {
 } environment;
 
 uint64 time_as_nanos(struct timespec* time);
-void status_calculate_next(status_msg*, struct timespec*, environment* env);
+void status_calculate_next(status_msg* next, status_msg* last, struct timespec* time, environment* env);
 
 int32 main(int32 argL, char** argV){
 
@@ -62,15 +62,18 @@ int32 main(int32 argL, char** argV){
   env.t_sec_on = 0.8;
   env.t_sec_off = -0.1;
 
+  //internal status of last on/off switch
+  status_msg status_last;
+  
   //status message container (response)
-  status_msg status;
+  status_msg status_public;
 
   //set initial status
   struct timespec status_time;
   clock_gettime(CLOCK_MONOTONIC, &status_time);
-  status_msg_temperature(&status, env.temperature + 90.0);
-  status_msg_is_on(&status, false);
-  status_msg_time(&status, time_as_nanos(&status_time));
+  status_msg_temperature(&status_last, env.temperature + 30.0);
+  status_msg_is_on(&status_last, false);
+  status_msg_time(&status_last, time_as_nanos(&status_time));
 
   //control messages containers (parse incoming messages)
   control_msg control;
@@ -78,39 +81,48 @@ int32 main(int32 argL, char** argV){
   //sleep timer
   struct timespec time_sleep;
   time_sleep.tv_sec = 0;
-  time_sleep.tv_nsec = 1000 * 1000 * 200;  //50ms
+  time_sleep.tv_nsec = 1000 * 1000 * 10;  //10ms
   
   //buffer
   int32 bytes_read = 0;
   uint32 buf_size = 1024;
   char message[buf_size];
-  printf("msg_size: %lu", sizeof(message));
+  memset(message, 0, buf_size);
   
   while(true){
     nanosleep(&time_sleep, 0);
     
-    bytes_read = pending_message_receive(client, message, buf_size);
-    if(bytes_read == 0){
-      //TODO handle error cases
-      continue;
-    }else if(bytes_read == -1){
-      continue;
-    }else if(bytes_read == -2){
-      continue;
-    }else{
-      if(msg_type(message) == 2){         //control
+    //TODO put read thingy in some loop
+    //as it is, only one message gets read per iteration
+    while((bytes_read = pending_message_receive(client, message, buf_size))){
+      if(bytes_read == -1){
+        //no message, but has more data -> retry
+        continue;
+      }
+      
+      uint32 type = msg_type(message);
+      
+      //control
+      if(type == 2){
         bool is_valid = control_msg_parse(&control, message);
-        if(is_valid){
-          status_calculate_next(&status, &status_time, &env);
-          status.is_on = control.set_on;
+        if(!is_valid){
+          continue;
         }
-      }else if(msg_type(message) == 3){   //status
-        status_calculate_next(&status, &status_time, &env);
-        status_msg_write(&status);
-        printf("sending message: %s", status.msg);
-        message_send(client, status.msg, 50, 0);
+        if(control.set_on == status_last.is_on){
+          continue;     //no change
+        }
+        //update reference status
+        status_calculate_next(&status_last, &status_last, &status_time, &env);
+        status_last.is_on = control.set_on;
+        
+      //status
+      }else if(type == 3){
+        status_calculate_next(&status_public, &status_last, &status_time, &env);
+        status_msg_write(&status_public);
+        printf("sending message: %s", status_public.msg);
+        message_send(client, status_public.msg, 50, 0);
       }else{
-        printf("not a valid message: %s\n", message);
+        printf("not a valid message: %s", message);
       }
     }
     
@@ -125,18 +137,21 @@ uint64 time_as_nanos(struct timespec* time){
   return time->tv_sec * 1000000000 + time->tv_nsec;
 }
 
-void status_calculate_next(status_msg* status, struct timespec* status_time, environment* env){
+void status_calculate_next(status_msg* next, status_msg* last, struct timespec* time, environment* env){
   //get time
-  clock_gettime(CLOCK_MONOTONIC, status_time);
-  uint64 time_new = time_as_nanos(status_time);
-  real64 time_diff_sec = (time_new - status->time) / 1000000000.0;
-  status->time = time_new;
+  clock_gettime(CLOCK_MONOTONIC, time);
+  uint64 time_next = time_as_nanos(time);   //next and last could point to the same struct
+  real64 d_time = (time_next - last->time) / 1000000000.0;
+  next->time = time_next;
   
-  //change temperature according to on/off state
-  status->temperature += (status->is_on ? env->t_sec_on : env->t_sec_off) * time_diff_sec;
+  //copy on|off state
+  next->is_on = last->is_on;
+  
+  //calculate temperature according to on|off state
+  next->temperature = last->temperature + (last->is_on ? env->t_sec_on : env->t_sec_off) * d_time;
   
   //if cooled below env. temperature, set to env temperature
-  if(status->temperature < env->temperature){
-    status->temperature = env->temperature;
+  if(next->temperature < env->temperature){
+    next->temperature = env->temperature;
   }
 }

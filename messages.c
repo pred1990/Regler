@@ -30,7 +30,7 @@ bool status_msg_parse(status_msg* status, char* msg){
   //read temperature
   char temperature_str[20];   //TODO figure out proper length
   str_cpy_substr(temperature_str, msg, 0, index);
-  status->temperature = atof(temperature_str);
+  real64 temperature = atof(temperature_str);
   
   //move to is_on
   msg += index + 1;
@@ -42,10 +42,11 @@ bool status_msg_parse(status_msg* status, char* msg){
   //read is_on
   char is_on_str[4];
   str_cpy_substr(is_on_str, msg, 0, index);
+  bool is_on;
   if(str_begins_with(is_on_str, "ON")){
-    status->is_on = true;
+    is_on = true;
   }else if(str_begins_with(is_on_str, "OFF")){
-    status->is_on = false;
+    is_on = false;
   }else{
     return false;
   }
@@ -60,10 +61,14 @@ bool status_msg_parse(status_msg* status, char* msg){
   //read time
   char time_str[20];
   str_cpy_substr(time_str, msg, 0, index);
-  status->time = atoi(time_str);
+  uint64 time = atoi(time_str);
+  //TODO what happens if atoi/atof receives an invalid number? -> use strtol or something
   
+  //set values
+  status->temperature = temperature;
+  status->is_on = is_on;
+  status->time = time;
   return true;
-  //TODO what happens if atoi/atof receives an invalid number?
 }
 
 void status_msg_temperature(status_msg* status, real64 temperature){
@@ -84,6 +89,13 @@ void status_msg_write(status_msg* status){
           status->temperature, 
           status->is_on ? "ON" : "OFF", 
           status->time);
+}
+
+void status_msg_cpy(status_msg* tar, status_msg* src){
+  str_cpy(tar->msg, src->msg);
+  tar->temperature = src->temperature;
+  tar->is_on = src->is_on;
+  tar->time = src->time;
 }
 
 bool control_msg_parse(control_msg* ctrl, char* msg){
