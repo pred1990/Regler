@@ -84,11 +84,11 @@ void status_msg_time(status_msg* status, uint64 time){
 }
 
 void status_msg_write(status_msg* status){
-  sprintf(status->msg, 
-          "status %e %s %" PRIu64 "\n", 
-          status->temperature, 
-          status->is_on ? "ON" : "OFF", 
-          status->time);
+  status->msg_size = sprintf(status->msg, 
+                      "status %e %s %" PRIu64 "\n", 
+                      status->temperature, 
+                      status->is_on ? "ON" : "OFF", 
+                      status->time) + 1;
 }
 
 void status_msg_cpy(status_msg* tar, status_msg* src){
@@ -130,11 +130,14 @@ void control_msg_set(control_msg* ctrl, bool set_on){
   ctrl->set_on = set_on;
   if(set_on){
     str_cpy(ctrl->msg, "control ON\n");
+    ctrl->msg_size = 12;
   }else{
     str_cpy(ctrl->msg, "control OFF\n");
+    ctrl->msg_size = 13;
   }
 }
 
 void request_msg_init(request_msg* req){
   str_cpy(req->msg, "request\n");
+  req->msg_size = 9;
 }

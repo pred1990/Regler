@@ -9,6 +9,7 @@ typedef struct{
   // "status $TEMPERATURE off uint64(20)\n"
   // 6 + 1 + 16 + 1 + 3 + 1 + 20 + 1 + 1 = 50
   char msg[50];
+  uint32 msg_size;
   real64 temperature;
   bool is_on;
   uint64 time;
@@ -16,11 +17,13 @@ typedef struct{
 
 typedef struct{
   char msg[13]; // "control off\n"
+  uint32 msg_size;
   bool set_on;
 } control_msg;
 
 typedef struct{
   char msg[9];  // "request\n"
+  uint32 msg_size;
 } request_msg;
 
 //get message type

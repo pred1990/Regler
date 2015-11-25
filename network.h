@@ -23,6 +23,4 @@ int32 socket_unblock_io(int32 socket_handle);
 //returns -1 if no message is found but end of data is not reached (retry)
 int32 pending_message_receive(int32 socket_handle, char* message, uint32 size);
 
-void message_send(int32 socket_handle, char* message, uint32 msg_size, int32 flags);
-
 #include "network.c"
