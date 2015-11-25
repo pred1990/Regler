@@ -69,7 +69,7 @@ int32 main(int32 argL, char** argV){
     //first check for messages
     int32 ret_val = 0;
     ret_val = pending_message_receive(socket_handle, message, sizeof(message));
-    if(ret_val == -2){
+    if(ret_val == -1){
         // buffer overrun, try again
         continue;
     }else if(ret_val > 0){

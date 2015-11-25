@@ -55,7 +55,10 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
 }
 
 int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
-
+  //note: return -1 means that this method can be called again
+  //could have used recursive call instead for nicer return value semantics
+  //but receiving lots of trash would force many recursive calls
+  
   errno = 0;
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
 
@@ -70,13 +73,14 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
   
   if(msg_end == -1){
     //has no end of message
-    
     if(size_peek < size){
       //no more data, can be cleared
       recv(socket_handle, message, size_peek, 0);
-      return -1;  //no more data
+      return 0;
     }else{
-      return -2;  //TODO not sure what to do here
+      //may have more data, throw half of current data (garbage) away
+      recv(socket_handle, message, size / 2, 0);
+      return -1;    //retry
     }
   }
   
@@ -89,7 +93,7 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     
     //figure out how far left we can go
     int32 leftmost_index = msg_end - 50;
-    if(leftmost_index < 0){
+    if(leftmost_index < 1){
       leftmost_index = 1;   //we already checked 0
     }
     
@@ -101,9 +105,16 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
   }
   
   if(!is_msg_found){
-    //there's a \n somewhere but everything before it is trash
-    recv(socket_handle, message, msg_end, 0);
-    return -2;
+    //there's a \n somewhere no message
+    if(size_peek < size){
+      //no more data, can be cleared
+      recv(socket_handle, message, size_peek, 0);
+      return 0;
+    }else{
+      //may have more data, throw everything up to \n away
+      recv(socket_handle, message, msg_end + 1, 0);
+      return -1;    //retry
+    }
   }
   
   //printf("begin: %i end: %i\n", msg_begin, msg_end);

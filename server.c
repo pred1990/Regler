@@ -94,18 +94,16 @@ int32 main(int32 argL, char** argV){
     
     //TODO put read thingy in some loop
     //as it is, only one message gets read per iteration
-    bytes_read = pending_message_receive(client, message, buf_size);
-    if(bytes_read == 0){
-      //TODO handle error cases
-      continue;
-    }else if(bytes_read == -1){
-      continue;
-    }else if(bytes_read == -2){
-      continue;
-    }else{
+    while((bytes_read = pending_message_receive(client, message, buf_size))){
+      if(bytes_read == -1){
+        //no message, but has more data -> retry
+        continue;
+      }
+      
+      uint32 type = msg_type(message);
       
       //control
-      if(msg_type(message) == 2){
+      if(type == 2){
         bool is_valid = control_msg_parse(&control, message);
         if(!is_valid){
           continue;
@@ -118,7 +116,7 @@ int32 main(int32 argL, char** argV){
         status_last.is_on = control.set_on;
         
       //status
-      }else if(msg_type(message) == 3){
+      }else if(type == 3){
         status_calculate_next(&status_public, &status_last, &status_time, &env);
         status_msg_write(&status_public);
         printf("sending message: %s", status_public.msg);
