@@ -86,6 +86,13 @@ void status_msg_write(status_msg* status){
           status->time);
 }
 
+void status_msg_cpy(status_msg* tar, status_msg* src){
+  str_cpy(tar->msg, src->msg);
+  tar->temperature = src->temperature;
+  tar->is_on = src->is_on;
+  tar->time = src->time;
+}
+
 bool control_msg_parse(control_msg* ctrl, char* msg){
   //skip type
   int32 index = index_of(msg, ' ');
