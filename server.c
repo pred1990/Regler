@@ -81,12 +81,13 @@ int32 main(int32 argL, char** argV){
   //sleep timer
   struct timespec time_sleep;
   time_sleep.tv_sec = 0;
-  time_sleep.tv_nsec = 1000 * 1000 * 50;  //50ms
+  time_sleep.tv_nsec = 1000 * 1000 * 10;  //10ms
   
   //buffer
   int32 bytes_read = 0;
   uint32 buf_size = 1024;
   char message[buf_size];
+  memset(message, 0, buf_size);
   
   while(true){
     nanosleep(&time_sleep, 0);

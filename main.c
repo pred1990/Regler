@@ -13,10 +13,12 @@ typedef struct{
   real64 target_temperature;
 } config;
 
+/*
 typedef struct{
   bool heating_on;
   real64 current_temperature;
 } State;
+*/
 
 //parameter interpretation
 void interpret_all(config*, int32, char**);
@@ -41,13 +43,12 @@ int32 main(int32 argL, char** argV){
 
   socket_unblock_io(socket_handle);
 
-  struct timespec time_wait;
-  int32 time_round = 100 * 1000; // 100 milliseconds
-  int32 time_request = 200 * 1000; // 1000 milliseconds
-  int32 time_passed = 0;
+  struct timespec time_sleep;
+  time_sleep.tv_sec = 0;   //!!!
+  time_sleep.tv_nsec = 5 * 1000 * 1000; // 5 milliseconds
+  uint32 time_request = 35 * 1000 * 1000; // 35 milliseconds
+  uint32 time_passed = 0;
   
-  State state = {};
-
   //prepare request message
   request_msg request = {};
   request_msg_init(&request);
@@ -58,21 +59,25 @@ int32 main(int32 argL, char** argV){
   control_msg_set(&control_off, false);
   control_msg_set(&control_on, true);
 
-  //status message container (reveice)
+  //status message container (receive)
   status_msg status = {};
   
   //send initial status message
   message_send(socket_handle, request.msg, sizeof(request.msg), 0);
-
+  printf("first request sent!\n");
+  
   //buffer
   int32 bytes_read = 0;
-  char message[kilobyte];
+  //uint32 buf_size = 1024;
+  char message[1024];
+  memset(message, 0 , 1024);
   
+  printf("entering loop...\n");
   while(true){
-    memset(message, 0 , kilobyte);
 
-    //first check for messages
-    while((bytes_read = pending_message_receive(socket_handle, message, sizeof(message)))){
+    //printf("bar\n");
+    //check for messages
+    while((bytes_read = pending_message_receive(socket_handle, message, 1024))){
       if(bytes_read == -1){
         // buffer overrun, try again
         continue;
@@ -88,14 +93,12 @@ int32 main(int32 argL, char** argV){
 
         //TODO do somthing meaningfull here
 
-        //TODO change status.temperature to status_msg_temperature ?
-        if(status.temperature < cfg.target_temperature){
-          if(state.heating_on == false){
+        if(status.temperature <= (cfg.target_temperature - 1)){
+          if(!status.is_on){
             message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
           }
-        //TODO change status.temperature to status_msg_temperature ?
-        } else if(status.temperature > cfg.target_temperature){
-          if(state.heating_on == true){
+        } else if(status.temperature >= (cfg.target_temperature + 1)){
+          if(!status.is_on){
             message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
           }
         }
@@ -119,11 +122,12 @@ int32 main(int32 argL, char** argV){
     }
 
     //wait till next round
-    time_wait.tv_nsec = time_round;
-    nanosleep(&time_wait, 0);
-    time_passed += time_round;
+    nanosleep(&time_sleep, 0);
+    time_passed += time_sleep.tv_nsec;
   }
 
+  printf("exited loop!\n");
+  
   close(socket_handle);
   return 0;
 }
