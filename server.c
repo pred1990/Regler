@@ -59,7 +59,7 @@ int32 main(int32 argL, char** argV){
   //create environment
   environment env;
   env.temperature = 23.5;
-  env.t_sec_on = 0.8;
+  env.t_sec_on = 2.0;
   env.t_sec_off = -0.1;
 
   //internal status of last on/off switch
@@ -120,7 +120,8 @@ int32 main(int32 argL, char** argV){
         status_calculate_next(&status_public, &status_last, &status_time, &env);
         status_msg_write(&status_public);
         printf("sending message: %s", status_public.msg);
-        message_send(client, status_public.msg, 50, 0);
+        
+        send(client, status_public.msg, status_public.msg_size, 0);
       }else{
         printf("not a valid message: %s", message);
       }

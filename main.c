@@ -43,8 +43,7 @@ int32 main(int32 argL, char** argV){
 
   socket_unblock_io(socket_handle);
 
-  struct timespec time_sleep;
-  time_sleep.tv_sec = 0;   //!!!
+  struct timespec time_sleep = {};
   time_sleep.tv_nsec = 5 * 1000 * 1000; // 5 milliseconds
   uint32 time_request = 35 * 1000 * 1000; // 35 milliseconds
   uint32 time_passed = 0;
@@ -63,7 +62,7 @@ int32 main(int32 argL, char** argV){
   status_msg status = {};
   
   //send initial status message
-  message_send(socket_handle, request.msg, sizeof(request.msg), 0);
+  send(socket_handle, request.msg, request.msg_size, 0);
   printf("first request sent!\n");
   
   //buffer
@@ -72,7 +71,6 @@ int32 main(int32 argL, char** argV){
   char message[1024];
   memset(message, 0 , 1024);
   
-  printf("entering loop...\n");
   while(true){
 
     //printf("bar\n");
@@ -95,11 +93,11 @@ int32 main(int32 argL, char** argV){
 
         if(status.temperature <= (cfg.target_temperature - 1)){
           if(!status.is_on){
-            message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+            send(socket_handle, control_on.msg, control_on.msg_size, 0);
           }
         } else if(status.temperature >= (cfg.target_temperature + 1)){
           if(!status.is_on){
-            message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+            send(socket_handle, control_off.msg, control_off.msg_size, 0);
           }
         }
         
@@ -112,7 +110,7 @@ int32 main(int32 argL, char** argV){
     if(time_passed >= time_request){
       //printf("Sending periodic request\n");
       errno = 0;
-      message_send(socket_handle, request.msg, sizeof(request.msg), 0);
+      send(socket_handle, request.msg, request.msg_size, 0);
       if(errno != 0){
         if(errno != EWOULDBLOCK || errno != EAGAIN){
           printf("Sending failed: %s \n", strerror(errno));

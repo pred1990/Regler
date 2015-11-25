@@ -35,7 +35,6 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
   struct sockaddr_in ip_address;
   memset(&ip_address, 0 ,sizeof(ip_address));
 
-
   //NOTE htons translates the number to Network byte order
   ip_address.sin_family = AF_INET;
   ip_address.sin_port = htons(port);
@@ -75,6 +74,7 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     //has no end of message
     if(size_peek < size){
       //no more data, can be cleared
+      //TODO fixme
       recv(socket_handle, message, size_peek, 0);
       return 0;
     }else{
@@ -122,7 +122,7 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     //clear trash, reload message
     recv(socket_handle, message, msg_begin, 0);   //target char* may not be 0
     msg_end -= msg_begin;
-    recv(socket_handle, message, msg_end + 2, MSG_PEEK);  // + 2 : include \n and \0
+    recv(socket_handle, message, msg_end + 2, MSG_PEEK);  // + 2 : include \n and \0    //TOOD check if this is necessary
   }
   //fetch message
   int32 bytes_read = recv(socket_handle, message, msg_end + 2, 0);
@@ -132,11 +132,4 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
   assert(message[msg_end] == '\n');
   
   return msg_end + 1;   //inclue \n
-}
-
-void message_send(int32 socket_handle, char* message, uint32 msg_size, int32 flags){
-  int32 msg_end = index_of(message, '\n');
-  int32 send_size = msg_end < 0 ? msg_size : msg_end + 2;
-  //fail gracefully or include/append \n\0
-  send(socket_handle, message, send_size, flags);
 }
