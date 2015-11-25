@@ -6,7 +6,7 @@
 !_TAG_PROGRAM_VERSION	5.8	//
 State	main.c	/^} State;$/;"	t	typeref:struct:__anon2	file:
 bool	typedefs.h	/^typedef int32 bool;$/;"	t
-client_connect	network.c	/^static int32 client_connect(char* address, uint32 port, int32* socket_handle){$/;"	f	file:
+client_connect	network.c	/^int32 client_connect(char* address, uint32 port, int32* socket_handle){$/;"	f
 config	main.c	/^} config;$/;"	t	typeref:struct:__anon1	file:
 control_msg	messages.h	/^} control_msg;$/;"	t	typeref:struct:__anon5
 control_msg_parse	messages.c	/^bool control_msg_parse(control_msg* ctrl, char* msg){$/;"	f
@@ -17,6 +17,7 @@ false	typedefs.h	15;"	d
 gigabyte	typedefs.h	22;"	d
 heating_on	main.c	/^  bool heating_on;$/;"	m	struct:__anon2	file:
 index_of	string_utils.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
+index_of_ignore_terminate	string_utils.c	/^int32 index_of_ignore_terminate(char* search_str, uint32 str_len, char find_char){$/;"	f
 int16	typedefs.h	/^typedef int16_t int16;$/;"	t
 int32	typedefs.h	/^typedef int32_t int32;$/;"	t
 int64	typedefs.h	/^typedef int64_t int64;$/;"	t
@@ -27,18 +28,19 @@ kilobyte	typedefs.h	20;"	d
 main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
 main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
 megabyte	typedefs.h	21;"	d
+message_send	network.c	/^void message_send(int32 socket_handle, char* message, uint32 msg_size, int32 flags){$/;"	f
 msg	messages.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon5
 msg	messages.h	/^  char msg[50];$/;"	m	struct:__anon4
 msg	messages.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon6
 msg_type	messages.c	/^uint32 msg_type(char* msg){$/;"	f
-pending_message_recive	network.c	/^static int32 pending_message_recive(int32 socket_handle, char* message, uint32 size){$/;"	f	file:
+pending_message_receive	network.c	/^int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){$/;"	f
 port	main.c	/^  uint32 port;$/;"	m	struct:__anon1	file:
 real32	typedefs.h	/^typedef float real32;$/;"	t
 real64	typedefs.h	/^typedef double real64;$/;"	t
 request_msg	messages.h	/^} request_msg;$/;"	t	typeref:struct:__anon6
 request_msg_init	messages.c	/^void request_msg_init(request_msg* req){$/;"	f
 set_on	messages.h	/^  bool set_on;$/;"	m	struct:__anon5
-socket_unblock_io	network.c	/^static int32 socket_unblock_io(int32 socket_handle){$/;"	f	file:
+socket_unblock_io	network.c	/^int32 socket_unblock_io(int32 socket_handle){$/;"	f
 status_calculate_next	server.c	/^void status_calculate_next(status_msg* status, struct timespec* status_time, environment* env){$/;"	f
 status_msg	messages.h	/^} status_msg;$/;"	t	typeref:struct:__anon4
 status_msg_is_on	messages.c	/^void status_msg_is_on(status_msg* status, bool is_on){$/;"	f
@@ -48,8 +50,8 @@ status_msg_time	messages.c	/^void status_msg_time(status_msg* status, uint64 tim
 status_msg_write	messages.c	/^void status_msg_write(status_msg* status){$/;"	f
 str_begins_with	string_utils.c	/^bool str_begins_with(char* a_chars, char* b_chars){$/;"	f
 str_cpy	string_utils.c	/^void str_cpy(char* dst_chars, char* src_chars){$/;"	f
-str_cpy_substr	string_utils.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, int32 src_offset, int32 src_end_index){$/;"	f
-substr_begins_with	string_utils.c	/^bool substr_begins_with(char* a_chars, int32 a_offset, char* b_chars){$/;"	f
+str_cpy_substr	string_utils.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, uint32 src_offset, uint32 src_end_index){$/;"	f
+substr_begins_with	string_utils.c	/^bool substr_begins_with(char* a_chars, uint32 a_offset, char* b_chars){$/;"	f
 t_sec_off	server.c	/^  real64 t_sec_off;$/;"	m	struct:__anon3	file:
 t_sec_on	server.c	/^  real64 t_sec_on;$/;"	m	struct:__anon3	file:
 target_temperature	main.c	/^  real64 target_temperature;$/;"	m	struct:__anon1	file:

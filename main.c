@@ -79,6 +79,9 @@ int32 main(int32 argL, char** argV){
 
       //check message
       uint32 message_type = msg_type(message);
+      if(message_type == 0){
+        message_type = 
+      }
       if(message_type == 1){
 
         //convert the message into internal type
@@ -89,17 +92,27 @@ int32 main(int32 argL, char** argV){
         }
       }
 
+      if(state.heating_on != status.is_on){
+        printf("Warning state missmatch: Regulators state: %s Message state: %s",
+                state.heating_on ? "ON" : "OFF",
+                status.is_on ? "ON" : "OFF");
+        state.heating_on = status.is_on;
+      }
+
+
       //TODO do somthing meaningfull here
 
       //TODO change status.temperature to status_msg_temperature ?
       if(status.temperature < cfg.target_temperature){
         if(state.heating_on == false){
           message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+          state.heating_on = true;
         }
       //TODO change status.temperature to status_msg_temperature ?
       } else if(status.temperature > cfg.target_temperature){
         if(state.heating_on == true){
           message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          state.heating_on = false;
         }
 
       }

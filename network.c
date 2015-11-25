@@ -63,14 +63,14 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     //there is no data to return
     return 0;
   }
-  
+
   bool is_msg_found = false;
   int32 msg_begin = 0;
   int32 msg_end = index_of_ignore_terminate(message, size, '\n') ;
-  
+
   if(msg_end == -1){
     //has no end of message
-    
+
     if(size_peek < size){
       //no more data, can be cleared
       recv(socket_handle, message, size_peek, 0);
@@ -79,33 +79,33 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
       return -2;  //TODO not sure what to do here
     }
   }
-  
+
   //find message begin
   if(msg_type(message) > 0){
     is_msg_found = true;
-    
+
   }else{
     msg_begin = msg_end;
-    
+
     //figure out how far left we can go
     int32 leftmost_index = msg_end - 50;
     if(leftmost_index < 0){
       leftmost_index = 1;   //we already checked 0
     }
-    
+
     //go left
     while(!is_msg_found && msg_begin >= leftmost_index){
       --msg_begin;
       is_msg_found = msg_type(message + msg_begin) > 0;
     }
   }
-  
+
   if(!is_msg_found){
     //there's a \n somewhere but everything before it is trash
     recv(socket_handle, message, msg_end, 0);
     return -2;
   }
-  
+
   //printf("begin: %i end: %i\n", msg_begin, msg_end);
   if(msg_begin > 0){
     //clear trash, reload message
