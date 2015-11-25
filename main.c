@@ -42,12 +42,10 @@ int32 main(int32 argL, char** argV){
   socket_unblock_io(socket_handle);
 
   struct timespec time_wait;
-
-
-  char message[kilobyte];
   int32 time_round = 100 * 1000; // 100 milliseconds
   int32 time_request = 200 * 1000; // 1000 milliseconds
   int32 time_passed = 0;
+  
   State state = {};
 
   //prepare request message
@@ -60,48 +58,50 @@ int32 main(int32 argL, char** argV){
   control_msg_set(&control_off, false);
   control_msg_set(&control_on, true);
 
+  //status message container (reveice)
+  status_msg status = {};
+  
   //send initial status message
   message_send(socket_handle, request.msg, sizeof(request.msg), 0);
 
+  //buffer
+  int32 bytes_read = 0;
+  char message[kilobyte];
+  
   while(true){
     memset(message, 0 , kilobyte);
 
     //first check for messages
-    int32 ret_val = 0;
-    ret_val = pending_message_receive(socket_handle, message, sizeof(message));
-    if(ret_val == -1){
+    while((bytes_read = pending_message_receive(socket_handle, message, sizeof(message)))){
+      if(bytes_read == -1){
         // buffer overrun, try again
         continue;
-    }else if(ret_val > 0){
-      //message received process it...
-      printf("Received message: %s", message);
-      status_msg status = {};
-
-      //check message
-      uint32 message_type = msg_type(message);
-      if(message_type == 1){
-
-        //convert the message into internal type
-        bool parsing_complete = status_msg_parse(&status, message);
-        if(parsing_complete == false){
-          printf("Warning: parsing of message %s failed\n",message);
+      }
+      
+      //status
+      if(msg_type(message) == 1){
+        printf("Received message: %s", message);
+        bool is_valid = status_msg_parse(&status, message);
+        if(!is_valid){
           continue;
         }
-      }
 
-      //TODO do somthing meaningfull here
+        //TODO do somthing meaningfull here
 
-      //TODO change status.temperature to status_msg_temperature ?
-      if(status.temperature < cfg.target_temperature){
-        if(state.heating_on == false){
-          message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+        //TODO change status.temperature to status_msg_temperature ?
+        if(status.temperature < cfg.target_temperature){
+          if(state.heating_on == false){
+            message_send(socket_handle, control_on.msg, sizeof(control_on.msg), 0);
+          }
+        //TODO change status.temperature to status_msg_temperature ?
+        } else if(status.temperature > cfg.target_temperature){
+          if(state.heating_on == true){
+            message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
+          }
         }
-      //TODO change status.temperature to status_msg_temperature ?
-      } else if(status.temperature > cfg.target_temperature){
-        if(state.heating_on == true){
-          message_send(socket_handle, control_off.msg, sizeof(control_off.msg), 0);
-        }
-
+        
+      }else{
+        printf("not a valid message: %s", message);
       }
     }
 

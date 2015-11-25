@@ -87,7 +87,6 @@ int32 main(int32 argL, char** argV){
   int32 bytes_read = 0;
   uint32 buf_size = 1024;
   char message[buf_size];
-  printf("msg_size: %lu", sizeof(message));
   
   while(true){
     nanosleep(&time_sleep, 0);
@@ -122,7 +121,7 @@ int32 main(int32 argL, char** argV){
         printf("sending message: %s", status_public.msg);
         message_send(client, status_public.msg, 50, 0);
       }else{
-        printf("not a valid message: %s\n", message);
+        printf("not a valid message: %s", message);
       }
     }
     
