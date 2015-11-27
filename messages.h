@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <inttypes.h>
+#include <string.h>
 #include "typedefs.h"
 #include "string_utils.h"
 

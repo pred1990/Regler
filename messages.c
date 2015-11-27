@@ -53,7 +53,7 @@ bool status_msg_parse(status_msg* status, char* msg){
   
   //move to time
   msg += index + 1;
-  index = index_of(msg, '\n');
+  index = strlen(msg);
   if(index < 0){
     return false;
   }
@@ -95,7 +95,7 @@ bool control_msg_parse(control_msg* ctrl, char* msg){
   
   //move to status
   msg += index + 1;
-  index = index_of(msg, '\n');
+  index = strlen(msg);
   if(index < 0){
     return false;
   }

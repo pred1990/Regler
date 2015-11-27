@@ -73,6 +73,7 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
   //but receiving lots of trash would force many recursive calls
   
   errno = 0;
+  memset(message, 0, size);
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
 
   if(errno == EAGAIN || errno == EWOULDBLOCK){
@@ -83,7 +84,7 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
   bool is_msg_found = false;
   int32 msg_begin = 0;
   int32 msg_end = index_of_ignore_terminate(message, size, '\n') ;
-  //printf("%s %i\n", message, msg_end);
+  //printf("%s\n", message);
   
   
   if(msg_end == -1){
@@ -138,13 +139,13 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     //clear trash, reload message
     recv(socket_handle, message, msg_begin, 0);   //target char* may not be 0
     msg_end -= msg_begin;
-    recv(socket_handle, message, msg_end + 1, MSG_PEEK);  // + 2 : include \n and \0    //TOOD check if this is necessary
+    //recv(socket_handle, message, msg_end + 1, MSG_PEEK);  // + 2 : include \n and \0    //TOOD check if this is necessary
   }
   //fetch message
   int32 bytes_read = recv(socket_handle, message, msg_end + 1, 0);
   
   //make sure we didn't do anything silly
-  printf("msg: %s", message);
+  //printf("msg: %s", message);
   assert(bytes_read == msg_end + 1);
   assert(message[msg_end] == '\n');
   message[msg_end] = '\0';

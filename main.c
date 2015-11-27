@@ -12,6 +12,7 @@ typedef struct{
   uint32 port;
   char ip[16];
   real64 target_temp;
+  real64 target_range;
 } config;
 
 typedef struct{
@@ -42,6 +43,7 @@ int32 main(int32 argL, char** argV){
   cfg.port = 4242;
   str_cpy(cfg.ip, "127.0.0.1");
   cfg.target_temp = 90.0;
+  cfg.target_range = 1.0;
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
@@ -59,7 +61,7 @@ int32 main(int32 argL, char** argV){
   struct timespec time_get = {};
   
   struct timespec time_sleep = {};
-  time_sleep.tv_nsec = msec_to_nsec(1);
+  time_sleep.tv_nsec = msec_to_nsec(10);
   
   //prepare request message
   request_msg request = {};
@@ -79,8 +81,8 @@ int32 main(int32 argL, char** argV){
   //target temperature range
   temp_range temp_target = {};
   temp_target.temp = cfg.target_temp;
-  temp_target.temp_low = temp_target.temp - 1.0;
-  temp_target.temp_high = temp_target.temp + 1.0;
+  temp_target.temp_low = temp_target.temp - cfg.target_range;
+  temp_target.temp_high = temp_target.temp + cfg.target_range;
   //bool is_within_temp_range = false;
   
   control_state ctrl_state = {};
@@ -93,8 +95,8 @@ int32 main(int32 argL, char** argV){
   //time for next request
   time_constrained t_send_next = {};
   t_send_next.time = 0;
-  t_send_next.time_min = msec_to_nsec(1);
-  t_send_next.time_max = msec_to_nsec(50);
+  t_send_next.time_min = msec_to_nsec(10);
+  t_send_next.time_max = msec_to_nsec(500);
   
   //network input message buffer
   int32 bytes_read = 0;
@@ -124,9 +126,10 @@ int32 main(int32 argL, char** argV){
 
       //status
       if(msg_type(message) == 1){
-        //printf("Received message: %s", message);
+        printf("Received message: %s\n", message);
         bool is_valid = status_msg_parse(&status_recv, message);
         if(!is_valid){
+          printf("status msg not valid!\n");
           continue;
         }
         
@@ -167,12 +170,14 @@ int32 main(int32 argL, char** argV){
       if(status_latest.temperature <= temp_target.temp_low){
         if(!status_latest.is_on){
           if(message_send(socket_handle, control_on.msg, control_on.msg_size, 0)){
+            printf("sending: ON\n");
             ctrl_state.is_on = true;
           }
         }
       } else if(status_latest.temperature >= temp_target.temp_high){
         if(status_latest.is_on){
           if(message_send(socket_handle, control_off.msg, control_off.msg_size, 0)){
+            printf("sending: OFF\n");
             ctrl_state.is_on = false;
           }
         }
