@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -16,6 +17,8 @@
 
 int32 client_connect(char* address, uint32 port, int32* socket_handle);
 int32 socket_unblock_io(int32 socket_handle);
+
+bool message_send(int32 socket_handle, char* msg, int32 m_size, int32 flags);
 
 //fetches message data from socket
 //returns positive message length if a message is found

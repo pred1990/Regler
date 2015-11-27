@@ -36,9 +36,6 @@ typedef struct{
 uint32 msg_type(char*);
 
 bool status_msg_parse(status_msg*, char*);
-void status_msg_temperature(status_msg*, real64);
-void status_msg_is_on(status_msg*, bool);
-void status_msg_time(status_msg*, uint64);
 void status_msg_write(status_msg*);
 void status_msg_cpy(status_msg* tar, status_msg* src);
 

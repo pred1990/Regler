@@ -11,6 +11,7 @@
 #include "typedefs.h"
 #include "messages.h"
 #include "network.h"
+#include "time_utils.h"
 
 typedef struct {
   real64 temperature;
@@ -18,7 +19,7 @@ typedef struct {
   real64 t_sec_off;
 } environment;
 
-uint64 time_as_nanos(struct timespec* time);
+uint64 time_to_nsec(struct timespec* time);
 void status_calculate_next(status_msg* next, status_msg* last, struct timespec* time, environment* env);
 
 int32 main(int32 argL, char** argV){
@@ -59,7 +60,7 @@ int32 main(int32 argL, char** argV){
   //create environment
   environment env;
   env.temperature = 23.5;
-  env.t_sec_on = 2.0;
+  env.t_sec_on = 5.0;
   env.t_sec_off = -0.1;
 
   //internal status of last on/off switch
@@ -69,19 +70,18 @@ int32 main(int32 argL, char** argV){
   status_msg status_public;
 
   //set initial status
-  struct timespec status_time;
+  struct timespec status_time = {};
   clock_gettime(CLOCK_MONOTONIC, &status_time);
-  status_msg_temperature(&status_last, env.temperature + 30.0);
-  status_msg_is_on(&status_last, false);
-  status_msg_time(&status_last, time_as_nanos(&status_time));
+  status_last.temperature = env.temperature;
+  status_last.is_on = false;
+  status_last.time = time_to_nsec(&status_time);
 
   //control messages containers (parse incoming messages)
   control_msg control;
   
   //sleep timer
-  struct timespec time_sleep;
-  time_sleep.tv_sec = 0;
-  time_sleep.tv_nsec = 1000 * 1000 * 10;  //10ms
+  struct timespec time_sleep = {};
+  time_sleep.tv_nsec = msec_to_nsec(10);
   
   //buffer
   int32 bytes_read = 0;
@@ -134,15 +134,12 @@ int32 main(int32 argL, char** argV){
 
 }
 
-uint64 time_as_nanos(struct timespec* time){
-  return time->tv_sec * 1000000000 + time->tv_nsec;
-}
-
 void status_calculate_next(status_msg* next, status_msg* last, struct timespec* time, environment* env){
+  //note: next and last could point to the same struct
   //get time
   clock_gettime(CLOCK_MONOTONIC, time);
-  uint64 time_next = time_as_nanos(time);   //next and last could point to the same struct
-  real64 d_time = (time_next - last->time) / 1000000000.0;
+  uint64 time_next = time_to_nsec(time);
+  real64 d_time = nsec_to_sec(time_next - last->time);
   next->time = time_next;
   
   //copy on|off state

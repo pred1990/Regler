@@ -38,6 +38,8 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
   //NOTE htons translates the number to Network byte order
   ip_address.sin_family = AF_INET;
   ip_address.sin_port = htons(port);
+  //ip_address.sin_addr = 
+    inet_aton(address, &ip_address.sin_addr);
 
 
   printf("connecting to: %s\n", address);
@@ -51,6 +53,18 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
   }
 
   return 0;
+}
+
+bool message_send(int32 socket_handle, char* message, int32 message_size, int32 flags){
+  send(socket_handle, message, message_size, flags);
+  if(errno != 0){
+    if(errno != EWOULDBLOCK || errno != EAGAIN){
+      printf("Sending failed: %s \n", strerror(errno));
+      errno = 0;
+      return false;
+    }
+  }
+  return true;
 }
 
 int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
@@ -69,7 +83,9 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
   bool is_msg_found = false;
   int32 msg_begin = 0;
   int32 msg_end = index_of_ignore_terminate(message, size, '\n') ;
-
+  //printf("%s %i\n", message, msg_end);
+  
+  
   if(msg_end == -1){
     //has no end of message
     if(size_peek < size){
@@ -92,7 +108,7 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     msg_begin = msg_end;
 
     //figure out how far left we can go
-    int32 leftmost_index = msg_end - 50;
+    int32 leftmost_index = msg_end - 60;
     if(leftmost_index < 1){
       leftmost_index = 1;   //we already checked 0
     }
@@ -122,14 +138,16 @@ int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
     //clear trash, reload message
     recv(socket_handle, message, msg_begin, 0);   //target char* may not be 0
     msg_end -= msg_begin;
-    recv(socket_handle, message, msg_end + 2, MSG_PEEK);  // + 2 : include \n and \0    //TOOD check if this is necessary
+    recv(socket_handle, message, msg_end + 1, MSG_PEEK);  // + 2 : include \n and \0    //TOOD check if this is necessary
   }
   //fetch message
-  int32 bytes_read = recv(socket_handle, message, msg_end + 2, 0);
+  int32 bytes_read = recv(socket_handle, message, msg_end + 1, 0);
   
   //make sure we didn't do anything silly
-  assert(bytes_read == msg_end + 2);
+  printf("msg: %s", message);
+  assert(bytes_read == msg_end + 1);
   assert(message[msg_end] == '\n');
+  message[msg_end] = '\0';
   
   return msg_end + 1;   //inclue \n
 }

@@ -6,7 +6,7 @@ uint32 msg_type(char* msg){
     return 1;
   }else if(str_begins_with(msg, "control ")){
     return 2;
-  }else if(str_begins_with(msg, "request\n")){
+  }else if(str_begins_with(msg, "request")){
     return 3;
   }else{
     return 0; //undefined
@@ -28,7 +28,7 @@ bool status_msg_parse(status_msg* status, char* msg){
   }
   
   //read temperature
-  char temperature_str[20];   //TODO figure out proper length
+  char temperature_str[30];   //TODO figure out proper length
   str_cpy_substr(temperature_str, msg, 0, index);
   real64 temperature = atof(temperature_str);
   
@@ -71,21 +71,9 @@ bool status_msg_parse(status_msg* status, char* msg){
   return true;
 }
 
-void status_msg_temperature(status_msg* status, real64 temperature){
-  status->temperature = temperature;
-}
-
-void status_msg_is_on(status_msg* status, bool is_on){
-  status->is_on = is_on;
-}
-
-void status_msg_time(status_msg* status, uint64 time){
-  status->time = time;
-}
-
 void status_msg_write(status_msg* status){
   status->msg_size = sprintf(status->msg, 
-                      "status %e %s %" PRIu64 "\n", 
+                      "status %e %s %lu\n", 
                       status->temperature, 
                       status->is_on ? "ON" : "OFF", 
                       status->time) + 1;

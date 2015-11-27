@@ -14,6 +14,7 @@ fi
 gcc main.c \
 	-g -Wall \
 	-o bin/start \
+	-O0 \
   -std=gnu99
 
 gcc server.c \
