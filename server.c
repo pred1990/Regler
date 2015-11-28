@@ -94,7 +94,7 @@ int32 main(int32 argL, char** argV){
     
     //TODO put read thingy in some loop
     //as it is, only one message gets read per iteration
-    while((bytes_read = pending_message_receive(client, message, buf_size))){
+    while((bytes_read = message_receive(client, message, buf_size))){
       if(bytes_read == -1){
         //no message, but has more data -> retry
         continue;

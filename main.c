@@ -33,7 +33,7 @@ typedef struct{
 
 //parameter interpretation
 void interpret_all(config*, int32, char**);
-uint64 time_median(time_constrained*);
+uint64 get_constrained_time(time_constrained*);
 bool is_send_ok();
 
 int32 main(int32 argL, char** argV){
@@ -47,21 +47,24 @@ int32 main(int32 argL, char** argV){
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
-
-  int32 socket_handle = 0;
-
-  int32 error = client_connect(cfg.ip, cfg.port, &socket_handle);
-  if(error < 0){
-    return -1;
-  }
-
-  socket_unblock_io(socket_handle);
-
-  //struct to be used for clock_gettime
-  struct timespec time_get = {};
   
+  //target temperature range
+  temp_range temp_target = {};
+  temp_target.temp = cfg.target_temp;
+  temp_target.temp_low = temp_target.temp - cfg.target_range;
+  temp_target.temp_high = temp_target.temp + cfg.target_range;
+  
+  //timers structs
+  struct timespec time_get = {};
   struct timespec time_sleep = {};
-  time_sleep.tv_nsec = msec_to_nsec(10);
+  time_sleep.tv_nsec = msec_to_nsec(10);  //TODO use timeout-blocking poll on socket instead
+  
+  //timer variables for next request
+  uint64 t_recv_latest = 0;
+  time_constrained t_send_next = {};
+  t_send_next.time_min = msec_to_nsec(10);
+  t_send_next.time_max = msec_to_nsec(500);
+  real64 t_send_factor = 0.3;
   
   //prepare request message
   request_msg request = {};
@@ -72,37 +75,29 @@ int32 main(int32 argL, char** argV){
   control_msg control_on = {};
   control_msg_set(&control_off, false);
   control_msg_set(&control_on, true);
+  //bool set_on_latest = false;
+  control_state ctrl_state = {};
 
   //status message containers
   status_msg status_recv = {};
   status_msg status_latest = {};
   bool has_status_latest = false;
   
-  //target temperature range
-  temp_range temp_target = {};
-  temp_target.temp = cfg.target_temp;
-  temp_target.temp_low = temp_target.temp - cfg.target_range;
-  temp_target.temp_high = temp_target.temp + cfg.target_range;
-  //bool is_within_temp_range = false;
-  
-  control_state ctrl_state = {};
-  
-  uint64 t_recv_latest = 0;
-  //uint64 t_send_latest = 0; //figure out why this may be useful
-  
-  real64 t_send_factor = 0.3;
-  
-  //time for next request
-  time_constrained t_send_next = {};
-  t_send_next.time = 0;
-  t_send_next.time_min = msec_to_nsec(10);
-  t_send_next.time_max = msec_to_nsec(500);
-  
   //network input message buffer
   int32 bytes_read = 0;
   uint32 buf_size = 1024;
   char message[buf_size];
   memset(message, 0 , buf_size);
+  
+  
+  //connect to simulation
+  int32 socket_handle = 0;
+  int32 error = client_connect(cfg.ip, cfg.port, &socket_handle);
+  if(error < 0){
+    return -1;
+  }
+  socket_unblock_io(socket_handle);
+  
   
   //send off control msg
   if(message_send(socket_handle, control_off.msg, control_off.msg_size, 0)){
@@ -115,17 +110,16 @@ int32 main(int32 argL, char** argV){
     //t_send_latest = time_to_nsec(&time_get);
   }
   
+  
   while(true){
 
-    //receive status message
-    while((bytes_read = pending_message_receive(socket_handle, message, buf_size))){
+    //receive status messages
+    while((bytes_read = message_receive(socket_handle, message, buf_size))){
       if(bytes_read == -1){
         // buffer overrun, try again
         continue;
       }
-
-      //status
-      if(msg_type(message) == 1){
+      if(msg_type(message) == 1){   //status msg
         printf("Received message: %s\n", message);
         bool is_valid = status_msg_parse(&status_recv, message);
         if(!is_valid){
@@ -136,22 +130,19 @@ int32 main(int32 argL, char** argV){
         clock_gettime(CLOCK_MONOTONIC, &time_get);
         t_recv_latest = time_to_nsec(&time_get);
         
-        //TODO figure out estimate time
-        
+        //calculate est. time at which target temperature is reached
         if(has_status_latest){
+          //linear eq: m * x + b = c  ->  x = (c - b) / m
+          //where c: target_temp, b: recv_temp, m: delta_temp / delta_time
           real64 time_diff = nsec_to_sec(status_recv.time - status_latest.time);
           real64 temp_diff = status_recv.temperature - status_latest.temperature;
           
           if(time_diff > 0 && temp_diff != 0.0){
-            //linear eq: m * x + b = c
-            real64 m = temp_diff / time_diff;
-            real64 b = status_recv.temperature;
-            real64 c = ctrl_state.is_on ? temp_target.temp_high : temp_target.temp_low;
+            real64 t_temp = ctrl_state.is_on ? temp_target.temp_high : temp_target.temp_low;
+            real64 t_sec = (t_temp - status_recv.temperature) * time_diff / temp_diff;
             
-            real64 t_sec = (c - b) / m;
-            //printf("(%f - %f) / %f = %f\n", c, b, m, t_sec);
-            t_send_next.time = t_sec < 0.0 ? 0 : sec_to_nsec(t_sec) * t_send_factor;
-            //printf("wait for %lu (%lu)\n", t_send_next.time, time_median(&t_send_next));
+            t_send_next.time = t_sec < 0.0 ? 0 : sec_to_nsec(t_sec * t_send_factor);
+            //printf("wait for %lu (%lu)\n", t_send_next.time, get_constrained_time(&t_send_next));
           }else{
             t_send_next.time = 0;
           }
@@ -188,8 +179,7 @@ int32 main(int32 argL, char** argV){
     uint64 t_now = time_to_nsec(&time_get);
     
     //send request message
-    //printf("now: %lu latest: %lu delay: %lu\n", t_now, t_recv_latest, time_median(&t_send_next));
-    if(t_now >= t_recv_latest + time_median(&t_send_next)){
+    if(t_now >= t_recv_latest + get_constrained_time(&t_send_next)){
     
       //printf("Sending periodic request\n");
       if(message_send(socket_handle, request.msg, request.msg_size, 0)){
@@ -232,11 +222,18 @@ void interpret_all(config* cfg, int32 argL, char** argV){
       str_cpy_substr(dst_chars, argV[i], index + 1, index + 1 + size);
       cfg->target_temp = (atof(dst_chars));
       printf("target temperature set to %f\n", cfg->target_temp);
+      
+    }else if(str_begins_with(argV[i], "range")){
+      int size = 24;    //est. max length for double value
+      char dst_chars[size];
+      str_cpy_substr(dst_chars, argV[i], index + 1, index + 1 + size);
+      cfg->target_temp = (atof(dst_chars));
+      printf("target temperature range set to %f\n", cfg->target_range);
     }
   }
 }
 
-uint64 time_median(time_constrained* time){
+uint64 get_constrained_time(time_constrained* time){
   //assume time_low <= time_high
   if(time->time < time->time_min){
     return time->time_min;

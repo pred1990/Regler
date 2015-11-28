@@ -67,7 +67,7 @@ bool message_send(int32 socket_handle, char* message, int32 message_size, int32 
   return true;
 }
 
-int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){
+int32 message_receive(int32 socket_handle, char* message, uint32 size){
   //note: return -1 means that this method can be called again
   //could have used recursive call instead for nicer return value semantics
   //but receiving lots of trash would force many recursive calls

@@ -24,6 +24,6 @@ bool message_send(int32 socket_handle, char* msg, int32 m_size, int32 flags);
 //returns positive message length if a message is found
 //returns 0 if no message is found and end of data is reached (no retry)
 //returns -1 if no message is found but end of data is not reached (retry)
-int32 pending_message_receive(int32 socket_handle, char* message, uint32 size);
+int32 message_receive(int32 socket_handle, char* message, uint32 size);
 
 #include "network.c"

@@ -14,8 +14,11 @@ uint32 msg_type(char* msg){
 }
 
 bool status_msg_parse(status_msg* status, char* msg){
+  char* endptr;
+  int32 index;
+  
   //skip type
-  int32 index = index_of(msg, ' ');
+  index = index_of(msg, ' ');
   if(index < 0){
     return false;
   }
@@ -28,19 +31,20 @@ bool status_msg_parse(status_msg* status, char* msg){
   }
   
   //read temperature
-  char temperature_str[30];   //TODO figure out proper length
-  str_cpy_substr(temperature_str, msg, 0, index);
-  real64 temperature = atof(temperature_str);
+  real64 temperature = strtod(msg, &endptr);
+  if(*endptr != ' '){
+    return false;
+  }
   
   //move to is_on
   msg += index + 1;
   index = index_of(msg, ' ');
-  if(index < 0){
+  if(index < 0 || index > 3){
     return false;
   }
   
   //read is_on
-  char is_on_str[4];
+  char is_on_str[3];
   str_cpy_substr(is_on_str, msg, 0, index);
   bool is_on;
   if(str_begins_with(is_on_str, "ON")){
@@ -59,10 +63,10 @@ bool status_msg_parse(status_msg* status, char* msg){
   }
   
   //read time
-  char time_str[20];
-  str_cpy_substr(time_str, msg, 0, index);
-  uint64 time = atoi(time_str);
-  //TODO what happens if atoi/atof receives an invalid number? -> use strtol or something
+  uint64 time = strtol(msg, &endptr, 10);
+  if(*endptr != '\0'){
+    return false;
+  }
   
   //set values
   status->temperature = temperature;
@@ -96,12 +100,12 @@ bool control_msg_parse(control_msg* ctrl, char* msg){
   //move to status
   msg += index + 1;
   index = strlen(msg);
-  if(index < 0){
+  if(index < 0 || index > 3){
     return false;
   }
   
   //read status
-  char status_str[4];
+  char status_str[3];
   str_cpy_substr(status_str, msg, 0, index);
   if(str_begins_with(status_str, "ON")){
     ctrl->set_on = true;
