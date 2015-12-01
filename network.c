@@ -38,8 +38,7 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
   //NOTE htons translates the number to Network byte order
   ip_address.sin_family = AF_INET;
   ip_address.sin_port = htons(port);
-  //ip_address.sin_addr = 
-    inet_aton(address, &ip_address.sin_addr);
+  inet_aton(address, &ip_address.sin_addr);
 
 
   printf("connecting to: %s\n", address);

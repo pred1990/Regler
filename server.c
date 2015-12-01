@@ -65,7 +65,7 @@ int32 main(int32 argL, char** argV){
 
   //internal status of last on/off switch
   status_msg status_last;
-  
+
   //status message container (response)
   status_msg status_public;
 
@@ -78,20 +78,20 @@ int32 main(int32 argL, char** argV){
 
   //control messages containers (parse incoming messages)
   control_msg control;
-  
+
   //sleep timer
   struct timespec time_sleep = {};
   time_sleep.tv_nsec = msec_to_nsec(10);
-  
+
   //buffer
   int32 bytes_read = 0;
   uint32 buf_size = 1024;
   char message[buf_size];
   memset(message, 0, buf_size);
-  
+
   while(true){
     nanosleep(&time_sleep, 0);
-    
+
     //TODO put read thingy in some loop
     //as it is, only one message gets read per iteration
     while((bytes_read = message_receive(client, message, buf_size))){
@@ -99,9 +99,9 @@ int32 main(int32 argL, char** argV){
         //no message, but has more data -> retry
         continue;
       }
-      
+
       uint32 type = msg_type(message);
-      
+
       //control
       if(type == 2){
         bool is_valid = control_msg_parse(&control, message);
@@ -114,19 +114,19 @@ int32 main(int32 argL, char** argV){
         //update reference status
         status_calculate_next(&status_last, &status_last, &status_time, &env);
         status_last.is_on = control.set_on;
-        
+
       //status
       }else if(type == 3){
         status_calculate_next(&status_public, &status_last, &status_time, &env);
         status_msg_write(&status_public);
         printf("sending message: %s", status_public.msg);
-        
+
         message_send(client, status_public.msg, status_public.msg_size, 0);
       }else{
         printf("not a valid message: %s", message);
       }
     }
-    
+
   }
 
   close(client);
@@ -141,13 +141,13 @@ void status_calculate_next(status_msg* next, status_msg* last, struct timespec* 
   uint64 time_next = time_to_nsec(time);
   real64 d_time = nsec_to_sec(time_next - last->time);
   next->time = time_next;
-  
+
   //copy on|off state
   next->is_on = last->is_on;
-  
+
   //calculate temperature according to on|off state
   next->temperature = last->temperature + (last->is_on ? env->t_sec_on : env->t_sec_off) * d_time;
-  
+
   //if cooled below env. temperature, set to env temperature
   if(next->temperature < env->temperature){
     next->temperature = env->temperature;

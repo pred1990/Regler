@@ -7,11 +7,13 @@
 bool	typedefs.h	/^typedef int32 bool;$/;"	t
 client_connect	network.c	/^int32 client_connect(char* address, uint32 port, int32* socket_handle){$/;"	f
 config	main.c	/^} config;$/;"	t	typeref:struct:__anon1	file:
-control_msg	messages.h	/^} control_msg;$/;"	t	typeref:struct:__anon4
+control_msg	messages.h	/^} control_msg;$/;"	t	typeref:struct:__anon7
 control_msg_parse	messages.c	/^bool control_msg_parse(control_msg* ctrl, char* msg){$/;"	f
 control_msg_set	messages.c	/^void control_msg_set(control_msg* ctrl, bool set_on){$/;"	f
-environment	server.c	/^} environment;$/;"	t	typeref:struct:__anon2	file:
+control_state	main.c	/^} control_state;$/;"	t	typeref:struct:__anon4	file:
+environment	server.c	/^} environment;$/;"	t	typeref:struct:__anon5	file:
 false	typedefs.h	15;"	d
+get_constrained_time	main.c	/^uint64 get_constrained_time(time_constrained* time){$/;"	f
 gigabyte	typedefs.h	22;"	d
 index_of	string_utils.c	/^int32 index_of(char* search_str, char find_char){$/;"	f
 index_of_ignore_terminate	string_utils.c	/^int32 index_of_ignore_terminate(char* search_str, uint32 str_len, char find_char){$/;"	f
@@ -20,43 +22,56 @@ int32	typedefs.h	/^typedef int32_t int32;$/;"	t
 int64	typedefs.h	/^typedef int64_t int64;$/;"	t
 interpret_all	main.c	/^void interpret_all(config* cfg, int32 argL, char** argV){$/;"	f
 ip	main.c	/^  char ip[16];$/;"	m	struct:__anon1	file:
-is_on	messages.h	/^  bool is_on;$/;"	m	struct:__anon3
+is_on	main.c	/^  bool is_on;$/;"	m	struct:__anon4	file:
+is_on	messages.h	/^  bool is_on;$/;"	m	struct:__anon6
 kilobyte	typedefs.h	20;"	d
 main	main.c	/^int32 main(int32 argL, char** argV){$/;"	f
 main	server.c	/^int32 main(int32 argL, char** argV){$/;"	f
 megabyte	typedefs.h	21;"	d
-message_send	network.c	/^void message_send(int32 socket_handle, char* message, uint32 msg_size, int32 flags){$/;"	f
-msg	messages.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon4
-msg	messages.h	/^  char msg[50];$/;"	m	struct:__anon3
-msg	messages.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon5
+message_receive	network.c	/^int32 message_receive(int32 socket_handle, char* message, uint32 size){$/;"	f
+message_send	network.c	/^bool message_send(int32 socket_handle, char* message, int32 message_size, int32 flags){$/;"	f
+msec_to_nsec	time_utils.c	/^uint64 msec_to_nsec(uint64 msec){$/;"	f
+msg	messages.h	/^  char msg[13]; \/\/ "control off\\n"$/;"	m	struct:__anon7
+msg	messages.h	/^  char msg[50];$/;"	m	struct:__anon6
+msg	messages.h	/^  char msg[9];  \/\/ "request\\n"$/;"	m	struct:__anon8
+msg_size	messages.h	/^  uint32 msg_size;$/;"	m	struct:__anon6
+msg_size	messages.h	/^  uint32 msg_size;$/;"	m	struct:__anon7
+msg_size	messages.h	/^  uint32 msg_size;$/;"	m	struct:__anon8
 msg_type	messages.c	/^uint32 msg_type(char* msg){$/;"	f
-pending_message_receive	network.c	/^int32 pending_message_receive(int32 socket_handle, char* message, uint32 size){$/;"	f
+nsec_to_sec	time_utils.c	/^real64 nsec_to_sec(uint64 nsec){$/;"	f
 port	main.c	/^  uint32 port;$/;"	m	struct:__anon1	file:
 real32	typedefs.h	/^typedef float real32;$/;"	t
 real64	typedefs.h	/^typedef double real64;$/;"	t
-request_msg	messages.h	/^} request_msg;$/;"	t	typeref:struct:__anon5
+request_msg	messages.h	/^} request_msg;$/;"	t	typeref:struct:__anon8
 request_msg_init	messages.c	/^void request_msg_init(request_msg* req){$/;"	f
-set_on	messages.h	/^  bool set_on;$/;"	m	struct:__anon4
+sec_to_nsec	time_utils.c	/^uint64 sec_to_nsec(real64 sec){$/;"	f
+set_on	messages.h	/^  bool set_on;$/;"	m	struct:__anon7
 socket_unblock_io	network.c	/^int32 socket_unblock_io(int32 socket_handle){$/;"	f
 status_calculate_next	server.c	/^void status_calculate_next(status_msg* next, status_msg* last, struct timespec* time, environment* env){$/;"	f
-status_msg	messages.h	/^} status_msg;$/;"	t	typeref:struct:__anon3
+status_msg	messages.h	/^} status_msg;$/;"	t	typeref:struct:__anon6
 status_msg_cpy	messages.c	/^void status_msg_cpy(status_msg* tar, status_msg* src){$/;"	f
-status_msg_is_on	messages.c	/^void status_msg_is_on(status_msg* status, bool is_on){$/;"	f
 status_msg_parse	messages.c	/^bool status_msg_parse(status_msg* status, char* msg){$/;"	f
-status_msg_temperature	messages.c	/^void status_msg_temperature(status_msg* status, real64 temperature){$/;"	f
-status_msg_time	messages.c	/^void status_msg_time(status_msg* status, uint64 time){$/;"	f
 status_msg_write	messages.c	/^void status_msg_write(status_msg* status){$/;"	f
 str_begins_with	string_utils.c	/^bool str_begins_with(char* a_chars, char* b_chars){$/;"	f
 str_cpy	string_utils.c	/^void str_cpy(char* dst_chars, char* src_chars){$/;"	f
 str_cpy_substr	string_utils.c	/^void str_cpy_substr(char* dst_chars, char* src_chars, uint32 src_offset, uint32 src_end_index){$/;"	f
 substr_begins_with	string_utils.c	/^bool substr_begins_with(char* a_chars, uint32 a_offset, char* b_chars){$/;"	f
-t_sec_off	server.c	/^  real64 t_sec_off;$/;"	m	struct:__anon2	file:
-t_sec_on	server.c	/^  real64 t_sec_on;$/;"	m	struct:__anon2	file:
-target_temperature	main.c	/^  real64 target_temperature;$/;"	m	struct:__anon1	file:
-temperature	messages.h	/^  real64 temperature;$/;"	m	struct:__anon3
-temperature	server.c	/^  real64 temperature;$/;"	m	struct:__anon2	file:
-time	messages.h	/^  uint64 time;$/;"	m	struct:__anon3
-time_as_nanos	server.c	/^uint64 time_as_nanos(struct timespec* time){$/;"	f
+t_sec_off	server.c	/^  real64 t_sec_off;$/;"	m	struct:__anon5	file:
+t_sec_on	server.c	/^  real64 t_sec_on;$/;"	m	struct:__anon5	file:
+target_range	main.c	/^  real64 target_range;$/;"	m	struct:__anon1	file:
+target_temp	main.c	/^  real64 target_temp;$/;"	m	struct:__anon1	file:
+temp	main.c	/^  real64 temp;$/;"	m	struct:__anon2	file:
+temp_high	main.c	/^  real64 temp_high;$/;"	m	struct:__anon2	file:
+temp_low	main.c	/^  real64 temp_low;$/;"	m	struct:__anon2	file:
+temp_range	main.c	/^} temp_range;$/;"	t	typeref:struct:__anon2	file:
+temperature	messages.h	/^  real64 temperature;$/;"	m	struct:__anon6
+temperature	server.c	/^  real64 temperature;$/;"	m	struct:__anon5	file:
+time	main.c	/^  uint64 time;$/;"	m	struct:__anon3	file:
+time	messages.h	/^  uint64 time;$/;"	m	struct:__anon6
+time_constrained	main.c	/^} time_constrained;$/;"	t	typeref:struct:__anon3	file:
+time_max	main.c	/^  uint64 time_max;$/;"	m	struct:__anon3	file:
+time_min	main.c	/^  uint64 time_min;$/;"	m	struct:__anon3	file:
+time_to_nsec	time_utils.c	/^uint64 time_to_nsec(struct timespec* time){$/;"	f
 true	typedefs.h	16;"	d
 uint16	typedefs.h	/^typedef uint16_t uint16;$/;"	t
 uint32	typedefs.h	/^typedef uint32_t uint32;$/;"	t

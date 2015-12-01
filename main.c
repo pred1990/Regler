@@ -47,25 +47,25 @@ int32 main(int32 argL, char** argV){
 
   //grab available config values from parameters
   interpret_all(&cfg, argL, argV);
-  
+
   //target temperature range
   temp_range temp_target = {};
   temp_target.temp = cfg.target_temp;
   temp_target.temp_low = temp_target.temp - cfg.target_range;
   temp_target.temp_high = temp_target.temp + cfg.target_range;
-  
+
   //timers structs
   struct timespec time_get = {};
   struct timespec time_sleep = {};
   time_sleep.tv_nsec = msec_to_nsec(10);  //TODO use timeout-blocking poll on socket instead
-  
+
   //timer variables for next request
   uint64 t_recv_latest = 0;
   time_constrained t_send_next = {};
   t_send_next.time_min = msec_to_nsec(10);
   t_send_next.time_max = msec_to_nsec(500);
   real64 t_send_factor = 0.3;
-  
+
   //prepare request message
   request_msg request = {};
   request_msg_init(&request);
@@ -82,14 +82,14 @@ int32 main(int32 argL, char** argV){
   status_msg status_recv = {};
   status_msg status_latest = {};
   bool has_status_latest = false;
-  
+
   //network input message buffer
   int32 bytes_read = 0;
   uint32 buf_size = 1024;
   char message[buf_size];
   memset(message, 0 , buf_size);
-  
-  
+
+
   //connect to simulation
   int32 socket_handle = 0;
   int32 error = client_connect(cfg.ip, cfg.port, &socket_handle);
@@ -97,20 +97,20 @@ int32 main(int32 argL, char** argV){
     return -1;
   }
   socket_unblock_io(socket_handle);
-  
-  
+
+
   //send off control msg
   if(message_send(socket_handle, control_off.msg, control_off.msg_size, 0)){
     ctrl_state.is_on = false;
   }
-  
+
   //send initial request
   if(message_send(socket_handle, request.msg, request.msg_size, 0)){
     //clock_gettime(CLOCK_MONOTONIC, &time_get);
     //t_send_latest = time_to_nsec(&time_get);
   }
-  
-  
+
+
   while(true){
 
     //receive status messages
@@ -126,31 +126,31 @@ int32 main(int32 argL, char** argV){
           printf("status msg not valid!\n");
           continue;
         }
-        
+
         clock_gettime(CLOCK_MONOTONIC, &time_get);
         t_recv_latest = time_to_nsec(&time_get);
-        
+
         //calculate est. time at which target temperature is reached
         if(has_status_latest){
           //linear eq: m * x + b = c  ->  x = (c - b) / m
           //where c: target_temp, b: recv_temp, m: delta_temp / delta_time
           real64 time_diff = nsec_to_sec(status_recv.time - status_latest.time);
           real64 temp_diff = status_recv.temperature - status_latest.temperature;
-          
+
           if(time_diff > 0 && temp_diff != 0.0){
             real64 t_temp = ctrl_state.is_on ? temp_target.temp_high : temp_target.temp_low;
             real64 t_sec = (t_temp - status_recv.temperature) * time_diff / temp_diff;
-            
+
             t_send_next.time = t_sec < 0.0 ? 0 : sec_to_nsec(t_sec * t_send_factor);
             //printf("wait for %lu (%lu)\n", t_send_next.time, get_constrained_time(&t_send_next));
           }else{
             t_send_next.time = 0;
           }
         }
-        
+
         status_msg_cpy(&status_latest, &status_recv);
         has_status_latest = true;
-        
+
       }else{
         printf("not a valid message: %s", message);
       }
@@ -174,24 +174,24 @@ int32 main(int32 argL, char** argV){
         }
       }
     }
-    
+
     clock_gettime(CLOCK_MONOTONIC, &time_get);
     uint64 t_now = time_to_nsec(&time_get);
-    
+
     //send request message
     if(t_now >= t_recv_latest + get_constrained_time(&t_send_next)){
-    
+
       //printf("Sending periodic request\n");
       if(message_send(socket_handle, request.msg, request.msg_size, 0)){
         //clock_gettime(CLOCK_MONOTONIC, &time_get);
         //t_send_latest = time_to_nsec(&time_get);
       }
     }
-    
+
     //wait till next round
     nanosleep(&time_sleep, 0);
   }
-  
+
   close(socket_handle);
   return 0;
 }
@@ -222,7 +222,7 @@ void interpret_all(config* cfg, int32 argL, char** argV){
       str_cpy_substr(dst_chars, argV[i], index + 1, index + 1 + size);
       cfg->target_temp = (atof(dst_chars));
       printf("target temperature set to %f\n", cfg->target_temp);
-      
+
     }else if(str_begins_with(argV[i], "range")){
       int size = 24;    //est. max length for double value
       char dst_chars[size];
