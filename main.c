@@ -69,7 +69,7 @@ int32 main(int32 argL, char** argV){
   interpret_all(&cfg, argL, argV);
 
   //target temperature range
-  real64 temp_range_factor = 0.65;
+  real64 temp_range_factor = 0.3;
   temp_range temp_target = {};
   temp_target.temp = cfg.target_temp;
   temp_target.temp_low = temp_target.temp - cfg.target_range * temp_range_factor;
@@ -82,10 +82,13 @@ int32 main(int32 argL, char** argV){
 
   //timer variables for next request
   uint64 t_recv_latest = 0;
+  uint64 t_request_sent_latest = 0;
+  uint64 t_control_sent_latest = 0;
+  uint64 t_now = 0;
   time_constrained t_send_next = {};
-  t_send_next.time_min = msec_to_nsec(10);
-  t_send_next.time_max = msec_to_nsec(500);
-  real64 t_send_factor = 0.3;
+  t_send_next.time_min = msec_to_nsec(20);
+  t_send_next.time_max = msec_to_nsec(1000);
+  real64 t_send_factor = 0.4;
 
   //prepare request message
   request_msg request = {};
@@ -121,14 +124,16 @@ int32 main(int32 argL, char** argV){
 
 
   //send off control msg
+  clock_gettime(CLOCK_MONOTONIC, &time_get);
   if(message_send(socket_handle, control_off.msg, control_off.msg_size, 0)){
+    t_control_sent_latest = time_to_nsec(&time_get);
     ctrl_state.is_on = false;
   }
 
   //send initial request
+  clock_gettime(CLOCK_MONOTONIC, &time_get);
   if(message_send(socket_handle, request.msg, request.msg_size, 0)){
-    //clock_gettime(CLOCK_MONOTONIC, &time_get);
-    //t_send_latest = time_to_nsec(&time_get);
+    t_request_sent_latest = time_to_nsec(&time_get);
   }
 
 
@@ -148,20 +153,26 @@ int32 main(int32 argL, char** argV){
       clock_gettime(CLOCK_MONOTONIC, &time_get);
       t_recv_latest = time_to_nsec(&time_get);
       
-      printf("Received message: %s\n", message);
+      //printf("received status\n");
+      
+      //printf("Received message: %s\n", message);
       //calculate est. time at which target temperature is reached
       if(has_status_latest){
         //linear eq: m * x + b = c  ->  x = (c - b) / m
         //where c: target_temp, b: recv_temp, m: delta_temp / delta_time
+        if(status_recv.time <= status_latest.time){
+          continue;
+        }
+        
         real64 time_diff = nsec_to_sec(status_recv.time - status_latest.time);
         real64 temp_diff = status_recv.temperature - status_latest.temperature;
 
-        if(time_diff > 0 && temp_diff != 0.0){
+        if(temp_diff != 0.0){
           real64 t_temp = ctrl_state.is_on ? temp_target.temp_high : temp_target.temp_low;
           real64 t_sec = (t_temp - status_recv.temperature) * time_diff / temp_diff;
 
           t_send_next.time = t_sec < 0.0 ? 0 : sec_to_nsec(t_sec * t_send_factor);
-          //printf("wait for %lu (%lu)\n", t_send_next.time, get_constrained_time(&t_send_next));
+          //printf("wait for %" PRIu64 " (%" PRIu64 ")\n", t_send_next.time, get_constrained_time(&t_send_next));
         }else{
           t_send_next.time = 0;
         }
@@ -172,12 +183,16 @@ int32 main(int32 argL, char** argV){
     }
 
 
-    //Sending control messages if neccesary
-    if(has_status_latest){
+    clock_gettime(CLOCK_MONOTONIC, &time_get);
+    t_now = time_to_nsec(&time_get);
+
+    //send control message if neccesary
+    if(has_status_latest && t_now >= t_control_sent_latest + t_send_next.time_min){
       if(status_latest.temperature <= temp_target.temp_low){
         if(!status_latest.is_on){
           if(message_send(socket_handle, control_on.msg, control_on.msg_size, 0)){
             printf("sending: ON\n");
+            t_control_sent_latest = t_now;
             ctrl_state.is_on = true;
           }
         }
@@ -185,6 +200,7 @@ int32 main(int32 argL, char** argV){
         if(status_latest.is_on){
           if(message_send(socket_handle, control_off.msg, control_off.msg_size, 0)){
             printf("sending: OFF\n");
+            t_control_sent_latest = t_now;
             ctrl_state.is_on = false;
           }
         }
@@ -192,20 +208,21 @@ int32 main(int32 argL, char** argV){
     }
 
     clock_gettime(CLOCK_MONOTONIC, &time_get);
-    uint64 t_now = time_to_nsec(&time_get);
+    t_now = time_to_nsec(&time_get);
 
     //send request message
-    if(t_now >= t_recv_latest + get_constrained_time(&t_send_next)){
-
-      //printf("Sending periodic request\n");
+    //TODO consider sent latest
+    if(t_now >= t_recv_latest + get_constrained_time(&t_send_next) 
+       && t_now >= t_request_sent_latest + t_send_next.time_min){
       if(message_send(socket_handle, request.msg, request.msg_size, 0)){
-        //clock_gettime(CLOCK_MONOTONIC, &time_get);
-        //t_send_latest = time_to_nsec(&time_get);
+        //printf("sending request\n");
+        t_request_sent_latest = t_now;
       }
     }
 
     //wait till next round
     nanosleep(&time_sleep, 0);
+    //printf("I'm alive: %" PRIu64 "\n", t_now);
   }
 
   close(socket_handle);

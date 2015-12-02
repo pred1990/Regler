@@ -1,6 +1,6 @@
 if [ ! -d "bin_arm/" ]; then
-	mkdir bin
-	echo creating folder: "bin"
+	mkdir bin_arm
+	echo creating folder: "bin_arm"
 fi
 
 if [ -f "start" ]; then
@@ -9,11 +9,12 @@ fi
 
 arm-linux-gnueabihf-gcc main.c \
 	-Wall \
-	-o bin/start \
-	-std=c99
+	-o bin_arm/start \
+	-std=gnu99
 
 if [ -f "bin_arm/start" ]; then
 	chmod 755 bin/start
+	scp bin_arm/start daniel@192.168.0.100:~/start
 else
 	echo "File start was not created"
 fi

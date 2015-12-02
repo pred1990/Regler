@@ -2,7 +2,7 @@
 #include "time_utils.h"
 
 uint64 time_to_nsec(struct timespec* time){
-  return time->tv_sec * 1000000000 + time->tv_nsec;
+  return ((uint64) (time->tv_sec)) * 1000000000 + time->tv_nsec;
 }
 
 real64 nsec_to_sec(uint64 nsec){
@@ -16,3 +16,7 @@ uint64 sec_to_nsec(real64 sec){
 uint64 msec_to_nsec(uint64 msec){
   return msec * 1000000;
 }
+
+//uint64 str_to_uint64(){
+  
+//}

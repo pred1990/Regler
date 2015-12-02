@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "typedefs.h"
 #include "string_utils.h"
 

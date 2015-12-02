@@ -63,8 +63,10 @@ bool status_msg_parse(status_msg* status, char* msg){
   }
   
   //read time
-  uint64 time = strtol(msg, &endptr, 10);
-  if(*endptr != '\0'){
+  errno = 0;
+  uint64 time = strtoull(msg, &endptr, 10);   //strtol returns a 32bit uint on ARM (Beagleboard XM), which is not sufficient
+  if(*endptr != '\0' || errno == ERANGE){
+    errno = 0;
     return false;
   }
   
@@ -77,7 +79,7 @@ bool status_msg_parse(status_msg* status, char* msg){
 
 void status_msg_write(status_msg* status){
   status->msg_size = sprintf(status->msg, 
-                      "status %e %s %lu\n", 
+                      "status %e %s %" PRIu64 "\n", 
                       status->temperature, 
                       status->is_on ? "ON" : "OFF", 
                       status->time) + 1;
