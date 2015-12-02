@@ -122,6 +122,7 @@ int32 main(int32 argL, char** argV){
         printf("sending message: %s", status_public.msg);
 
         message_send(client, status_public.msg, status_public.msg_size, 0);
+        
       }else{
         printf("not a valid message: %s", message);
       }

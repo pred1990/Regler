@@ -155,7 +155,7 @@ int32 main(int32 argL, char** argV){
       
       //printf("received status\n");
       
-      //printf("Received message: %s\n", message);
+      printf("Received message: %s\n", message);
       //calculate est. time at which target temperature is reached
       if(has_status_latest){
         //linear eq: m * x + b = c  ->  x = (c - b) / m
