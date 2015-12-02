@@ -33,7 +33,7 @@ typedef struct{
 
 //interprets key-value pairs from console parameters
 //pairs should be passed as "key=value" without quotes
-//expected keys are: ip, port, target, range
+//expected keys are: port, ip, target, range
 void interpret_all(config*, int32, char**);
 
 //applies time constraints
