@@ -31,10 +31,15 @@ typedef struct{
   bool is_on;
 } control_state;
 
-//parameter interpretation
+//interprets key-value pairs from console parameters
+//pairs should be passed as "key=value" without quotes
+//expected keys are: ip, port, target, range
 void interpret_all(config*, int32, char**);
+
+//applies time constraints
+//returns the struct's time if it is within the defined bounds
+//else returns the appropriate bound
 uint64 get_constrained_time(time_constrained*);
-bool is_send_ok();
 
 int32 main(int32 argL, char** argV){
   config cfg;
@@ -49,10 +54,11 @@ int32 main(int32 argL, char** argV){
   interpret_all(&cfg, argL, argV);
 
   //target temperature range
+  real64 temp_range_factor = 0.65;
   temp_range temp_target = {};
   temp_target.temp = cfg.target_temp;
-  temp_target.temp_low = temp_target.temp - cfg.target_range;
-  temp_target.temp_high = temp_target.temp + cfg.target_range;
+  temp_target.temp_low = temp_target.temp - cfg.target_range * temp_range_factor;
+  temp_target.temp_high = temp_target.temp + cfg.target_range * temp_range_factor;
 
   //timers structs
   struct timespec time_get = {};
@@ -119,41 +125,35 @@ int32 main(int32 argL, char** argV){
         // buffer overrun, try again
         continue;
       }
-      if(msg_type(message) == 1){   //status msg
-        printf("Received message: %s\n", message);
-        bool is_valid = status_msg_parse(&status_recv, message);
-        if(!is_valid){
-          printf("status msg not valid!\n");
-          continue;
-        }
-
-        clock_gettime(CLOCK_MONOTONIC, &time_get);
-        t_recv_latest = time_to_nsec(&time_get);
-
-        //calculate est. time at which target temperature is reached
-        if(has_status_latest){
-          //linear eq: m * x + b = c  ->  x = (c - b) / m
-          //where c: target_temp, b: recv_temp, m: delta_temp / delta_time
-          real64 time_diff = nsec_to_sec(status_recv.time - status_latest.time);
-          real64 temp_diff = status_recv.temperature - status_latest.temperature;
-
-          if(time_diff > 0 && temp_diff != 0.0){
-            real64 t_temp = ctrl_state.is_on ? temp_target.temp_high : temp_target.temp_low;
-            real64 t_sec = (t_temp - status_recv.temperature) * time_diff / temp_diff;
-
-            t_send_next.time = t_sec < 0.0 ? 0 : sec_to_nsec(t_sec * t_send_factor);
-            //printf("wait for %lu (%lu)\n", t_send_next.time, get_constrained_time(&t_send_next));
-          }else{
-            t_send_next.time = 0;
-          }
-        }
-
-        status_msg_cpy(&status_latest, &status_recv);
-        has_status_latest = true;
-
-      }else{
-        printf("not a valid message: %s", message);
+      if(msg_type(message) != 1 || !status_msg_parse(&status_recv, message)){
+        printf("not a valid status message: %s\n", message);
+        continue;
       }
+
+      clock_gettime(CLOCK_MONOTONIC, &time_get);
+      t_recv_latest = time_to_nsec(&time_get);
+      
+      printf("Received message: %s\n", message);
+      //calculate est. time at which target temperature is reached
+      if(has_status_latest){
+        //linear eq: m * x + b = c  ->  x = (c - b) / m
+        //where c: target_temp, b: recv_temp, m: delta_temp / delta_time
+        real64 time_diff = nsec_to_sec(status_recv.time - status_latest.time);
+        real64 temp_diff = status_recv.temperature - status_latest.temperature;
+
+        if(time_diff > 0 && temp_diff != 0.0){
+          real64 t_temp = ctrl_state.is_on ? temp_target.temp_high : temp_target.temp_low;
+          real64 t_sec = (t_temp - status_recv.temperature) * time_diff / temp_diff;
+
+          t_send_next.time = t_sec < 0.0 ? 0 : sec_to_nsec(t_sec * t_send_factor);
+          //printf("wait for %lu (%lu)\n", t_send_next.time, get_constrained_time(&t_send_next));
+        }else{
+          t_send_next.time = 0;
+        }
+      }
+      
+      status_msg_cpy(&status_latest, &status_recv);
+      has_status_latest = true;
     }
 
     //send control message
