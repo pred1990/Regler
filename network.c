@@ -1,6 +1,9 @@
 #pragma once
 #include "network.h"
 
+/*
+* change the state of the given handle to nonblocking IO
+*/
 int32 socket_unblock_io(int32 socket_handle){
   //get current config of socket
   int32 current_flags = fcntl(socket_handle, F_GETFL, 0);
@@ -16,6 +19,13 @@ int32 socket_unblock_io(int32 socket_handle){
   return 0;
 }
 
+/*
+* connect to a server
+*
+* returns -1 if the socket call failes
+* returns -2 if the target address is not valid
+* or the connectino cannot be established.
+*/
 int32 client_connect(char* address, uint32 port, int32* socket_handle){
 
   //get socket
@@ -26,21 +36,24 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
   }
 
 
-  //NOTE returns 0 if host cannot be found or is malformed
+  //check if the address is valid. return value 0 means it is not.
   struct hostent *server = gethostbyname(address);
   if(server == 0){
     return -2;
   }
 
+  //clear the adress
   struct sockaddr_in ip_address;
   memset(&ip_address, 0 ,sizeof(ip_address));
 
-  //NOTE htons translates the number to Network byte order
+  //htons translates the number to Network byte order
+  //inet_aton does the smae with c strings
   ip_address.sin_family = AF_INET;
   ip_address.sin_port = htons(port);
   inet_aton(address, &ip_address.sin_addr);
 
 
+  //connect to the server
   printf("connecting to: %s\n", address);
   int32 state = connect(  *socket_handle,
                           (struct sockaddr*) &ip_address,
@@ -54,6 +67,9 @@ int32 client_connect(char* address, uint32 port, int32* socket_handle){
   return 0;
 }
 
+/*
+* send a massage with error checking
+*/
 bool message_send(int32 socket_handle, char* message, int32 message_size, int32 flags){
   send(socket_handle, message, message_size, flags);
   if(errno != 0){
@@ -70,7 +86,7 @@ int32 message_receive(int32 socket_handle, char* message, uint32 size){
   //note: return -1 means that this method can be called again
   //could have used recursive call instead for nicer return value semantics
   //but receiving lots of trash would force many recursive calls
-  
+
   errno = 0;
   memset(message, 0, size);
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
@@ -84,8 +100,8 @@ int32 message_receive(int32 socket_handle, char* message, uint32 size){
   int32 msg_begin = 0;
   int32 msg_end = index_of_ignore_terminate(message, size, '\n') ;
   //printf("%s\n", message);
-  
-  
+
+
   if(msg_end == -1){
     //has no end of message
     if(size_peek < size){
@@ -142,12 +158,12 @@ int32 message_receive(int32 socket_handle, char* message, uint32 size){
   }
   //fetch message
   int32 bytes_read = recv(socket_handle, message, msg_end + 1, 0);
-  
+
   //make sure we didn't do anything silly
   //printf("msg: %s", message);
   assert(bytes_read == msg_end + 1);
   assert(message[msg_end] == '\n');
   message[msg_end] = '\0';
-  
+
   return msg_end + 1;   //inclue \n
 }

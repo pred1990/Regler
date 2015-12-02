@@ -36,6 +36,21 @@ void interpret_all(config*, int32, char**);
 uint64 get_constrained_time(time_constrained*);
 bool is_send_ok();
 
+/*
+* Connects to a server using the supplied parameter
+*
+* If a connection could be established the programm will
+* request a status initially.
+*
+* Then it will request the state periodicly determined
+* by time_send_next.time.
+*
+* The Regulator will estimate how long it will take to heat
+* the water up. This value will be used as the next request
+* time. The time value in time_send_next will be clipped to
+* the minimun and maximum value of the time_constraind struct
+*
+*/
 int32 main(int32 argL, char** argV){
   config cfg;
 
@@ -156,7 +171,8 @@ int32 main(int32 argL, char** argV){
       }
     }
 
-    //send control message
+
+    //Sending control messages if neccesary
     if(has_status_latest){
       if(status_latest.temperature <= temp_target.temp_low){
         if(!status_latest.is_on){
@@ -196,14 +212,22 @@ int32 main(int32 argL, char** argV){
   return 0;
 }
 
+/*
+* reads the input and converts it to a config struct.
+*
+* Every parameter needs a '=' to be accepted as parameter
+*/
 void interpret_all(config* cfg, int32 argL, char** argV){
   for(int32 i = 0; i < argL; ++i){
 
+    //search for the seperator of key and value
     int32 index = index_of(argV[i], '=');
 
     if(index < 0){
+      //parameter is no good
       continue;
 
+    //scan for valid keys and read the values
     }else if(str_begins_with(argV[i], "port")){
       int size = 6;     //44444 + '\0' = 6
       char dst_chars[size];
@@ -233,6 +257,9 @@ void interpret_all(config* cfg, int32 argL, char** argV){
   }
 }
 
+/*
+* clip the time to the boundarys
+*/
 uint64 get_constrained_time(time_constrained* time){
   //assume time_low <= time_high
   if(time->time < time->time_min){
