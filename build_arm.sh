@@ -14,7 +14,7 @@ arm-linux-gnueabihf-gcc main.c \
 
 if [ -f "bin_arm/start" ]; then
 	chmod 755 bin/start
-	scp bin_arm/start daniel@192.168.0.100:~/start
+	scp bin_arm/start daniel@192.168.0.108:~/start
 else
 	echo "File start was not created"
 fi

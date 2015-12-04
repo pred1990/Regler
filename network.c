@@ -90,7 +90,7 @@ int32 message_receive(int32 socket_handle, char* message, uint32 size){
   errno = 0;
   memset(message, 0, size);
   int32 size_peek = recv(socket_handle, message, size, MSG_PEEK);
-
+//  printf("peek: %i %s\n", size_peek, message);
   if(errno == EAGAIN || errno == EWOULDBLOCK){
     //there is no data to return
     return 0;
@@ -121,8 +121,10 @@ int32 message_receive(int32 socket_handle, char* message, uint32 size){
     is_msg_found = true;
 
   }else{
+    /*
     msg_begin = msg_end;
 
+    
     //figure out how far left we can go
     int32 leftmost_index = msg_end - 60;
     if(leftmost_index < 1){
@@ -134,19 +136,18 @@ int32 message_receive(int32 socket_handle, char* message, uint32 size){
       --msg_begin;
       is_msg_found = msg_type(message + msg_begin) > 0;
     }
+    */
+    
+    msg_begin = 0;
+    while(!is_msg_found && ++msg_begin < msg_end){
+      is_msg_found = msg_type(message + msg_begin) > 0;
+    }
   }
 
   if(!is_msg_found){
-    //there's a \n somewhere no message
-    if(size_peek < size){
-      //no more data, can be cleared
-      recv(socket_handle, message, size_peek, 0);
-      return 0;
-    }else{
-      //may have more data, throw everything up to \n away
-      recv(socket_handle, message, msg_end + 1, 0);
-      return -1;    //retry
-    }
+    //may have more data, throw everything up to \n away
+    recv(socket_handle, message, msg_end + 1, 0);
+    return -1;    //retry
   }
 
   //printf("begin: %i end: %i\n", msg_begin, msg_end);
